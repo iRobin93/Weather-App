@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Vue 3 Weather App</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Vue 3 -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+  <!-- Axios -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+
+<body class="bg-gradient-to-br from-sky-100 to-blue-300 min-h-screen flex items-center justify-center">
+
+  <div id="app" class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md">
+    <h1 class="text-2xl font-bold text-center mb-6">🌤 Weather App</h1>
+
+    <!-- City selector -->
+    <select
+      v-model="selectedCity"
+      @change="fetchWeather"
+      class="w-full p-2 border rounded-lg mb-4"
+    >
+      <option disabled value="">Select a city</option>
+      <option v-for="(city, name) in cities" :key="name" :value="name">
+        {{ name }}
+      </option>
+    </select>
+
+    <!-- Loading -->
+    <p v-if="loading" class="text-center text-gray-500">
+      Loading weather...
+    </p>
+
+    <!-- Weather -->
+    <div v-if="weather && !loading" class="text-center space-y-2">
+      <h2 class="text-xl font-semibold">{{ selectedCity }}</h2>
+      <p class="text-4xl font-bold">{{ weather.temperature }}°C</p>
+      <p class="text-gray-600">Wind: {{ weather.wind }} m/s</p>
+      <p class="text-gray-600 capitalize">{{ weather.condition }}</p>
+    </div>
+
+    <!-- Error -->
+    <p v-if="error" class="text-center text-red-500">
+      {{ error }}
+    </p>
+  </div>
+
+  <script>
+    const app = Vue.createApp({
+      data() {
+        return {
+          selectedCity: "",
+          loading: false,
+          error: null,
+          weather: null,
+          cities: {
+            Oslo: { lat: 59.9114, lon: 10.7579 },
+            Bergen: { lat: 60.3913, lon: 5.3221 },
+            Trondheim: { lat: 63.4305, lon: 10.3951 }
+          }
+        }
+      },
+
+      methods: {
+        async fetchWeather() {
+          this.loading = true
+          this.error = null
+          this.weather = null
+
+          const { lat, lon } = this.cities[this.selectedCity]
+
+          try {
+            const response = await axios.get(
+              "https://api.met.no/weatherapi/locationforecast/2.0/compact",
+              {
+                params: { lat, lon },
+                headers: {
+                  "User-Agent": "vue-weather-app"
+                }
+              }
+            )
+
+            const details =
+              response.data.properties.timeseries[0].data.instant.details
+
+            this.weather = {
+              temperature: Math.round(details.air_temperature),
+              wind: details.wind_speed,
+              condition: "clear"
+            }
+          } catch (err) {
+            this.error = "Could not load weather data"
+          } finally {
+            this.loading = false
+          }
+        }
+      }
+    })
+
+    app.mount("#app")
+  </script>
+
+</body>
+</html>
