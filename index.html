@@ -1,109 +1,345 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <title>Vue 3 Weather App</title>
+    <meta charset="UTF-8" />
+    <title>Vue 3 Weather App</title>
 
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS v2 minified -->
+    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
 
-  <!-- Vue 3 -->
-  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- Vue 3 production -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 
-  <!-- Axios -->
-  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 
-<body class="bg-gradient-to-br from-sky-100 to-blue-300 min-h-screen flex items-center justify-center">
+<body class="min-h-screen">
 
-  <div id="app" class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md">
-    <h1 class="text-2xl font-bold text-center mb-6">🌤 Weather App</h1>
+    <div id="app"></div>
 
-    <!-- City selector -->
-    <select
-      v-model="selectedCity"
-      @change="fetchWeather"
-      class="w-full p-2 border rounded-lg mb-4"
-    >
-      <option disabled value="">Select a city</option>
-      <option v-for="(city, name) in cities" :key="name" :value="name">
-        {{ name }}
-      </option>
-    </select>
+    <script>
+        // -------------------------------
+        // Translations class
+        // -------------------------------
+        class Translations {
+            constructor(language = "en-EN") {
+                this.language = language;
 
-    <!-- Loading -->
-    <p v-if="loading" class="text-center text-gray-500">
+                const allTexts = {
+                    "en-EN": {
+                        settings: "Settings",
+                        location: "Location",
+                        appBackgroundColor: "App Background color",
+                        cardBackgroundColor: "Weather-Card Background color",
+                        textColor: "Text color",
+                        language: "Language",
+                        days: "Days to show",
+                        celsius: "Show Celsius",
+                        save: "Save",
+                        cancel: "Cancel",
+                        wind: "Wind",
+                        english: "English",
+                        norwegian: "Norwegian",
+                        PlaceNotFoundError: "Could not find location",
+
+                    },
+                    "no-NO": {
+                        settings: "Innstillinger",
+                        location: "Sted",
+                        appBackgroundColor: "App Bakgrunnsfarge",
+                        cardBackgroundColor: "Vær-Kort Bakgrunnsfarge",
+                        textColor: "Tekstfarge",
+                        language: "Språk",
+                        days: "Vis dager",
+                        celsius: "Vis Celsius",
+                        save: "Lagre",
+                        cancel: "Avbryt",
+                        wind: "Vind",
+                        english: "Engelsk",
+                        norwegian: "Norsk",
+                        PlaceNotFoundError: "Fant ikke stedet",
+                    },
+                    // Add more languages here
+                };
+
+                // Default to English if language not found
+                this.texts = allTexts[language] || allTexts["en-EN"];
+            }
+        }
+
+        // -------------------------------
+        // Axios instance
+        // -------------------------------
+        const api = axios.create({ baseURL: "https://api.met.no/weatherapi" });
+
+        // -------------------------------
+        // Settings Component
+        // -------------------------------
+        const SettingComponent = {
+            props: { contentBlock: Object },
+            emits: ["update:contentBlock", "save", "cancel"],
+            data() { return { localContent: { ...this.contentBlock.properties } } },
+            template: `
+<div class="bg-white bg-opacity-10 backdrop-blur-md p-4 rounded-xl space-y-4 text-white">
+    <h2 class="text-lg font-semibold">{{ localContent.texts.settings }}</h2>
+
+    <div>
+        <label class="block mb-1">{{ localContent.texts.location }}:</label>
+        <input type="text" v-model="localContent.location" class="w-full p-2 rounded bg-gray-800 text-white"/>
+    </div>
+
+<div>
+  <label class="block mb-1">{{ localContent.texts.appBackgroundColor }}:</label>
+  <input type="color" v-model="localContent.appBackgroundColor" />
+</div>
+
+<div>
+  <label class="block mb-1">{{ localContent.texts.cardBackgroundColor }}:</label>
+  <input type="color" v-model="localContent.cardBackgroundColor" />
+</div>
+
+
+    <div>
+        <label class="block mb-1">{{ localContent.texts.textColor }}:</label>
+        <input type="color" v-model="localContent.textColor"/>
+    </div>
+
+    <div>
+        <label class="block mb-1">{{ localContent.texts.language }}:</label>
+        <select v-model="localContent.language" class="w-full p-2 rounded bg-gray-800 text-white">
+            <option value="en-EN">{{ localContent.texts.english }}</option>
+            <option value="no-NO">{{ localContent.texts.norwegian }}</option>
+        </select>
+    </div>
+
+    <div>
+        <label class="block mb-1">{{ localContent.texts.days }}:</label>
+        <input type="number" v-model.number="localContent.showDays" min="1" max="7" class="w-full p-2 rounded bg-gray-800 text-white"/>
+    </div>
+
+    <div class="flex items-center space-x-2">
+        <label>{{ localContent.texts.celsius }}:</label>
+        <input type="checkbox" v-model="localContent.showCelcius"/>
+    </div>
+
+    <div class="flex justify-end space-x-2 mt-4">
+        <button @click="cancelSettings" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 rounded shadow text-white font-semibold transition">
+            ✖ {{ localContent.texts.cancel }}
+        </button>
+        <button @click="saveSettings" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded shadow text-white font-semibold transition">
+            💾 {{ localContent.texts.save }}
+        </button>
+    </div>
+</div>
+`,
+            methods: {
+                saveSettings() {
+                    const updated = {
+                        ...this.localContent,
+                        texts: new Translations(this.localContent.language).texts
+                    };
+                    this.$emit("update:contentBlock", { properties: updated });
+                    this.$emit("save");
+                },
+                cancelSettings() {
+                    this.localContent = { ...this.contentBlock.properties };
+                    this.$emit("cancel");
+                }
+            }
+        };
+
+        // -------------------------------
+        // WeatherCard Component
+        // -------------------------------
+        const WeatherCard = {
+            props: { contentBlock: Object, day: Object },
+            template: `
+<div class="rounded-2xl p-6 shadow-2xl text-center transform hover:scale-105 transition-transform duration-300 flex-shrink-0"
+     :style="{ backgroundColor: contentBlock.properties.cardBackgroundColor, color: contentBlock.properties.textColor, width: '180px' }">
+
+<h2 class="text-xl font-semibold">
+  {{ capitalizeFirst(new Date(day.date).toLocaleDateString(contentBlock.properties.language.split('-')[0], { weekday: 'short' })) }}
+</h2>
+  <p class="text-3xl font-bold">{{ day.temperature }}°C</p>
+  <p class="text-lg">{{ contentBlock.properties.texts.wind }}: {{ day.wind }} m/s</p>
+  <p class="capitalize">{{ day.condition }}</p>
+</div>
+`, methods: {
+  capitalizeFirst(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1).replace('.', '');
+  },}
+};
+
+        // -------------------------------
+        // Root App
+        // -------------------------------
+        const App = {
+            components: { SettingComponent, WeatherCard },
+            template: `
+<div class="min-h-screen flex flex-col items-center justify-center transition-colors duration-300"
+     :style="{ backgroundColor: contentBlock.properties.appBackgroundColor }">
+
+  <div class="w-full max-w-md p-6 space-y-6">
+    <h1 class="text-3xl font-bold text-white text-center drop-shadow-lg mb-4">
+      🌤 Weather App
+    </h1>
+
+    <p v-if="loading" class="text-center text-white text-lg">
       Loading weather...
     </p>
 
-    <!-- Weather -->
-    <div v-if="weather && !loading" class="text-center space-y-2">
-      <h2 class="text-xl font-semibold">{{ selectedCity }}</h2>
-      <p class="text-4xl font-bold">{{ weather.temperature }}°C</p>
-      <p class="text-gray-600">Wind: {{ weather.wind }} m/s</p>
-      <p class="text-gray-600 capitalize">{{ weather.condition }}</p>
-    </div>
+<div class="flex flex-row gap-4 justify-start flex-wrap-0" v-if="weather">
+  <WeatherCard
+    v-for="day in (weather || []).slice(0, contentBlock.properties.showDays)"
+    :key="day.date"
+    :day="day"
+    :contentBlock="contentBlock"
+  />
+</div>
 
-    <!-- Error -->
-    <p v-if="error" class="text-center text-red-500">
+
+    <p v-if="error" class="text-center text-red-300 font-semibold">
       {{ error }}
     </p>
   </div>
 
-  <script>
-    const app = Vue.createApp({
-      data() {
-        return {
-          selectedCity: "",
-          loading: false,
-          error: null,
-          weather: null,
-          cities: {
-            Oslo: { lat: 59.9114, lon: 10.7579 },
-            Bergen: { lat: 60.3913, lon: 5.3221 },
-            Trondheim: { lat: 63.4305, lon: 10.3951 }
-          }
-        }
-      },
+  <!-- Cogwheel -->
+  <div class="fixed top-4 right-4 z-50">
+    <button
+      @click="showSettings = !showSettings"
+      class="p-2 bg-white bg-opacity-20 backdrop-blur-md rounded-full hover:bg-opacity-40 transition"
+    >
+      ⚙️
+    </button>
+  </div>
 
-      methods: {
-        async fetchWeather() {
-          this.loading = true
-          this.error = null
-          this.weather = null
+  <!-- Settings -->
+  <div
+    v-if="showSettings"
+    class="fixed top-0 right-0 h-full w-80 bg-black bg-opacity-70 backdrop-blur-md p-6 shadow-xl z-40 overflow-auto"
+  >
+    <SettingComponent
+      :contentBlock="contentBlock"
+      @update:contentBlock="contentBlock = $event"
+      @save="onSettingsSave"
+      @cancel="showSettings = false"
+    />
+  </div>
+</div>
+`
+            ,
+            data() {
+                return {
+                    loading: false,
+                    error: null,
+                    weather: null,
+                    showSettings: false,
+                    contentBlock: {
+                        properties: {
+                            appBackgroundColor: "#2b1055",
+                            cardBackgroundColor: "#3b1c6e",
+                            textColor: "#ffffff",
+                            language: "en-EN",
+                            location: "Oslo, Norway",
+                            locationShortName: "Oslo",
+                            lat: 59.9114,
+                            lon: 10.7579,
+                            showDays: 1,
+                            showCelcius: true,
+                            texts: new Translations("en-EN").texts
+                        }
+                    }
 
-          const { lat, lon } = this.cities[this.selectedCity]
+                };
+            },
+            methods: {
+                async fetchWeather() {
+                    this.loading = true;
+                    this.error = null;
+                    this.weather = null;
 
-          try {
-            const response = await axios.get(
-              "https://api.met.no/weatherapi/locationforecast/2.0/compact",
-              {
-                params: { lat, lon },
-                headers: {
-                  "User-Agent": "vue-weather-app"
-                }
-              }
-            )
 
-            const details =
-              response.data.properties.timeseries[0].data.instant.details
 
-            this.weather = {
-              temperature: Math.round(details.air_temperature),
-              wind: details.wind_speed,
-              condition: "clear"
+
+                    const lat = this.contentBlock.properties.lat;
+                    const lon = this.contentBlock.properties.lon;
+                    const numberOfDays = this.contentBlock.properties.showDays;
+
+                    try {
+                        const res = await api.get("/locationforecast/2.0/compact", { params: { lat, lon } });
+                        const timeseries = res.data.properties.timeseries;
+
+                        const daysMap = {};
+                        const result = [];
+
+                        for (const ts of timeseries) {
+                            const date = ts.time.split("T")[0];
+                            if (!daysMap[date]) {
+                                daysMap[date] = true;
+                                result.push({
+                                    date,
+                                    temperature: ts.data.instant.details.air_temperature,
+                                    wind: ts.data.instant.details.wind_speed,
+                                    condition: ts.data.next_1_hours?.summary.symbol_code || "clear"
+                                });
+                                if (result.length >= numberOfDays) break;
+                            }
+                        }
+
+                        this.weather = result;
+                    } catch (e) {
+                        this.error = "Failed to load weather data";
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                async resolveLocation(query) {
+                    if (!query) return null;
+                    try {
+                        const res = await axios.get("https://nominatim.openstreetmap.org/search", {
+                            params: {
+                                q: query,
+                                format: "json",
+                                limit: 1
+                            },
+                            headers: { "Accept-Language": this.contentBlock.properties.language.split('-')[0] }
+                        });
+                        if (res.data.length) {
+                            const place = res.data[0];
+
+                            this.contentBlock.properties.lat = parseFloat(place.lat);
+                            this.contentBlock.properties.lon = parseFloat(place.lon);
+                            this.contentBlock.properties.location = place.display_name;
+                            this.contentBlock.properties.locationShortName = place.display_name.split(',')[0];
+
+                            return true;
+                        }
+                    } catch (err) {
+                        console.error("Nominatim error:", err);
+                    }
+                    return false;
+                },
+                onSettingsSave() {
+                    const resolved = this.resolveLocation(this.contentBlock.properties.location);
+                    if (!resolved) {
+                        this.error = this.contentBlock.properties.texts.PlaceNotFoundError;
+                        return;
+                    }
+                    this.fetchWeather();
+                    this.showSettings = false;
+                },
+
+            },
+            mounted() {
+                this.fetchWeather();
             }
-          } catch (err) {
-            this.error = "Could not load weather data"
-          } finally {
-            this.loading = false
-          }
-        }
-      }
-    })
+        };
 
-    app.mount("#app")
-  </script>
-
+        Vue.createApp(App).mount("#app");
+    </script>
 </body>
+
 </html>
