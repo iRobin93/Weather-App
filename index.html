@@ -19,56 +19,13 @@
 
     <div id="app"></div>
 
-    <script>
+    <script type="module">
+
+
         // -------------------------------
         // Translations class
         // -------------------------------
-        class Translations {
-            constructor(language = "en-EN") {
-                this.language = language;
-
-                const allTexts = {
-                    "en-EN": {
-                        settings: "Settings",
-                        location: "Location",
-                        appBackgroundColor: "App Background color",
-                        cardBackgroundColor: "Weather-Card Background color",
-                        textColor: "Text color",
-                        language: "Language",
-                        days: "Days to show",
-                        celsius: "Show Celsius",
-                        save: "Save",
-                        cancel: "Cancel",
-                        wind: "Wind",
-                        english: "English",
-                        norwegian: "Norwegian",
-                        PlaceNotFoundError: "Could not find location",
-
-                    },
-                    "no-NO": {
-                        settings: "Innstillinger",
-                        location: "Sted",
-                        appBackgroundColor: "App Bakgrunnsfarge",
-                        cardBackgroundColor: "Vær-Kort Bakgrunnsfarge",
-                        textColor: "Tekstfarge",
-                        language: "Språk",
-                        days: "Vis dager",
-                        celsius: "Vis Celsius",
-                        save: "Lagre",
-                        cancel: "Avbryt",
-                        wind: "Vind",
-                        english: "Engelsk",
-                        norwegian: "Norsk",
-                        PlaceNotFoundError: "Fant ikke stedet",
-                    },
-                    // Add more languages here
-                };
-
-                // Default to English if language not found
-                this.texts = allTexts[language] || allTexts["en-EN"];
-            }
-        }
-
+        import { Translations } from "./translations.js"
         // -------------------------------
         // Axios instance
         // -------------------------------
@@ -77,100 +34,46 @@
         // -------------------------------
         // Settings Component
         // -------------------------------
-        const SettingComponent = {
-            props: { contentBlock: Object },
-            emits: ["update:contentBlock", "save", "cancel"],
-            data() { return { localContent: { ...this.contentBlock.properties } } },
-            template: `
-<div class="bg-white bg-opacity-10 backdrop-blur-md p-4 rounded-xl space-y-4 text-white">
-    <h2 class="text-lg font-semibold">{{ localContent.texts.settings }}</h2>
+        import { SettingComponent } from "./components/settingComponent.js"
 
-    <div>
-        <label class="block mb-1">{{ localContent.texts.location }}:</label>
-        <input type="text" v-model="localContent.location" class="w-full p-2 rounded bg-gray-800 text-white"/>
-    </div>
-
-<div>
-  <label class="block mb-1">{{ localContent.texts.appBackgroundColor }}:</label>
-  <input type="color" v-model="localContent.appBackgroundColor" />
-</div>
-
-<div>
-  <label class="block mb-1">{{ localContent.texts.cardBackgroundColor }}:</label>
-  <input type="color" v-model="localContent.cardBackgroundColor" />
-</div>
-
-
-    <div>
-        <label class="block mb-1">{{ localContent.texts.textColor }}:</label>
-        <input type="color" v-model="localContent.textColor"/>
-    </div>
-
-    <div>
-        <label class="block mb-1">{{ localContent.texts.language }}:</label>
-        <select v-model="localContent.language" class="w-full p-2 rounded bg-gray-800 text-white">
-            <option value="en-EN">{{ localContent.texts.english }}</option>
-            <option value="no-NO">{{ localContent.texts.norwegian }}</option>
-        </select>
-    </div>
-
-    <div>
-        <label class="block mb-1">{{ localContent.texts.days }}:</label>
-        <input type="number" v-model.number="localContent.showDays" min="1" max="7" class="w-full p-2 rounded bg-gray-800 text-white"/>
-    </div>
-
-    <div class="flex items-center space-x-2">
-        <label>{{ localContent.texts.celsius }}:</label>
-        <input type="checkbox" v-model="localContent.showCelcius"/>
-    </div>
-
-    <div class="flex justify-end space-x-2 mt-4">
-        <button @click="cancelSettings" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 rounded shadow text-white font-semibold transition">
-            ✖ {{ localContent.texts.cancel }}
-        </button>
-        <button @click="saveSettings" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded shadow text-white font-semibold transition">
-            💾 {{ localContent.texts.save }}
-        </button>
-    </div>
-</div>
-`,
-            methods: {
-                saveSettings() {
-                    const updated = {
-                        ...this.localContent,
-                        texts: new Translations(this.localContent.language).texts
-                    };
-                    this.$emit("update:contentBlock", { properties: updated });
-                    this.$emit("save");
-                },
-                cancelSettings() {
-                    this.localContent = { ...this.contentBlock.properties };
-                    this.$emit("cancel");
-                }
-            }
-        };
 
         // -------------------------------
         // WeatherCard Component
         // -------------------------------
         const WeatherCard = {
-            props: { contentBlock: Object, day: Object },
+            props: { contentBlock: Object, day: Object, orientation: String },
             template: `
-<div class="rounded-2xl p-6 shadow-2xl text-center transform hover:scale-105 transition-transform duration-300 flex-shrink-0"
-     :style="{ backgroundColor: contentBlock.properties.cardBackgroundColor, color: contentBlock.properties.textColor, width: '180px' }">
+                        <div v-if="orientation == 'landscape'" class="rounded-2xl p-6 shadow-2xl text-center transform hover:scale-105 transition-transform duration-300 flex-shrink-0"
+                            :style="{ backgroundColor: contentBlock.properties.cardBackgroundColor, color: contentBlock.properties.textColor, width: '180px' }">
 
-<h2 class="text-xl font-semibold">
-  {{ capitalizeFirst(new Date(day.date).toLocaleDateString(contentBlock.properties.language.split('-')[0], { weekday: 'short' })) }}
-</h2>
-  <p class="text-3xl font-bold">{{ day.temperature }}°C</p>
-  <p class="text-lg">{{ contentBlock.properties.texts.wind }}: {{ day.wind }} m/s</p>
-  <p class="capitalize">{{ day.condition }}</p>
-</div>
-`, methods: {
-  capitalizeFirst(str) {
-    return str.charAt(0).toUpperCase() + str.slice(1).replace('.', '');
-  },}
-};
+                        <h2 class="text-xl font-semibold">
+                        {{ capitalizeFirst(new Date(day.date).toLocaleDateString(contentBlock.properties.language.split('-')[0], { weekday: 'short' })) }}
+                        </h2>
+                        <p class="text-3xl font-bold">{{ day.temperature }}°C</p>
+                        <p class="text-lg">{{ contentBlock.properties.texts.wind }}: {{ day.wind }} m/s</p>
+                        <p class="capitalize">{{ day.condition }}</p>
+                        </div>
+                        
+
+                        <div v-if="orientation == 'portrait'" class="rounded-2xl p-6 shadow-2xl text-center transform hover:scale-105 transition-transform duration-300 flex-shrink-0"
+                            :style="{ backgroundColor: contentBlock.properties.cardBackgroundColor, color: contentBlock.properties.textColor, width: '180px' }">
+
+                        <h2 class="text-xl font-semibold">
+                        {{ capitalizeFirst(new Date(day.date).toLocaleDateString(contentBlock.properties.language.split('-')[0], { weekday: 'short' })) }}
+                        </h2>
+                        <p class="text-3xl font-bold">{{ day.temperature }}°C</p>
+                        <p class="text-lg">{{ contentBlock.properties.texts.wind }}: {{ day.wind }} m/s</p>
+                        <p class="capitalize">{{ day.condition }}</p>
+                        </div>
+
+
+                    `,
+            methods: {
+                capitalizeFirst(str) {
+                    return str.charAt(0).toUpperCase() + str.slice(1).replace('.', '');
+                },
+            }
+        };
 
         // -------------------------------
         // Root App
@@ -178,57 +81,64 @@
         const App = {
             components: { SettingComponent, WeatherCard },
             template: `
-<div class="min-h-screen flex flex-col items-center justify-center transition-colors duration-300"
-     :style="{ backgroundColor: contentBlock.properties.appBackgroundColor }">
+                        <div class="min-h-screen flex flex-col items-center justify-center transition-colors duration-300"
+                            :style="{ backgroundColor: contentBlock.properties.appBackgroundColor }">
 
-  <div class="w-full max-w-md p-6 space-y-6">
-    <h1 class="text-3xl font-bold text-white text-center drop-shadow-lg mb-4">
-      🌤 Weather App
-    </h1>
-
-    <p v-if="loading" class="text-center text-white text-lg">
-      Loading weather...
-    </p>
-
-<div class="flex flex-row gap-4 justify-start flex-wrap-0" v-if="weather">
-  <WeatherCard
-    v-for="day in (weather || []).slice(0, contentBlock.properties.showDays)"
-    :key="day.date"
-    :day="day"
-    :contentBlock="contentBlock"
-  />
-</div>
+                        <div class="w-full max-w-md p-6 space-y-6">
 
 
-    <p v-if="error" class="text-center text-red-300 font-semibold">
-      {{ error }}
-    </p>
-  </div>
+                            <p v-if="loading" class="text-center text-white text-lg">
+                            Loading weather...
+                            </p>
 
-  <!-- Cogwheel -->
-  <div class="fixed top-4 right-4 z-50">
-    <button
-      @click="showSettings = !showSettings"
-      class="p-2 bg-white bg-opacity-20 backdrop-blur-md rounded-full hover:bg-opacity-40 transition"
-    >
-      ⚙️
-    </button>
-  </div>
+                       <div
+                            v-if="weather"
+                            class="flex gap-4"
+                            :class="orientation === 'portrait'
+                                ? 'flex-col items-center'
+                                : 'flex-row justify-start flex-nowrap'">
 
-  <!-- Settings -->
-  <div
-    v-if="showSettings"
-    class="fixed top-0 right-0 h-full w-80 bg-black bg-opacity-70 backdrop-blur-md p-6 shadow-xl z-40 overflow-auto"
-  >
-    <SettingComponent
-      :contentBlock="contentBlock"
-      @update:contentBlock="contentBlock = $event"
-      @save="onSettingsSave"
-      @cancel="showSettings = false"
-    />
-  </div>
-</div>
-`
+                            <WeatherCard
+                                v-for="day in (weather || []).slice(0, contentBlock.properties.showDays)"
+                                :key="day.date"
+                                :day="day"
+                                :contentBlock="contentBlock"
+                                :orientation="orientation"
+                            />
+                        </div>
+
+
+
+                        <p v-if="error" class="text-center text-red-300 font-semibold">
+                        {{ error }}
+                        </p>
+                    </div>
+
+                    <!-- Cogwheel -->
+                    <div class="fixed top-4 right-4 z-50">
+                        <button
+                        @click="showSettings = !showSettings"
+                        class="p-2 bg-white bg-opacity-20 backdrop-blur-md rounded-full hover:bg-opacity-40 transition"
+                        >
+                        ⚙️
+                        </button>
+                    </div>
+
+                    <!-- Settings -->
+                    <div
+                        v-if="showSettings"
+                        class="fixed top-0 right-0 h-full w-80 bg-black bg-opacity-70 backdrop-blur-md p-6 shadow-xl z-40 overflow-auto"
+                    >
+                        <SettingComponent
+                        :contentBlock="contentBlock"
+                        :Translations="Translations"
+                        @update:contentBlock="contentBlock = $event"
+                        @save="onSettingsSave"
+                        @cancel="showSettings = false"
+                        />
+                    </div>
+                    </div>
+                    `
             ,
             data() {
                 return {
@@ -236,21 +146,8 @@
                     error: null,
                     weather: null,
                     showSettings: false,
-                    contentBlock: {
-                        properties: {
-                            appBackgroundColor: "#2b1055",
-                            cardBackgroundColor: "#3b1c6e",
-                            textColor: "#ffffff",
-                            language: "en-EN",
-                            location: "Oslo, Norway",
-                            locationShortName: "Oslo",
-                            lat: 59.9114,
-                            lon: 10.7579,
-                            showDays: 1,
-                            showCelcius: true,
-                            texts: new Translations("en-EN").texts
-                        }
-                    }
+                    contentBlock: { properties: {} },
+                    orientation: null,
 
                 };
             },
@@ -331,9 +228,50 @@
                     this.fetchWeather();
                     this.showSettings = false;
                 },
+                iframeMessageHandler(e) {
+                    if (e && e.data) {
+                        if (e.data == '{}') {
+                            this.contentBlock = {};
+                        }
+                        else {
+                            console.log('e', e);
+
+                            const contentBlock = JSON.parse(e.data);
+                            this.contentBlock = contentBlock;
+
+                        }
+                    }
+                },
+                checkOrientation() {
+                    if (window.innerHeight > window.innerWidth) {
+                        this.orientation = 'portrait';
+                    }
+                    else {
+                        this.orientation = 'landscape';
+                    }
+                },
 
             },
             mounted() {
+                this.contentBlock = {
+                    properties: {
+                        appBackgroundColor: "#2b1055",
+                        cardBackgroundColor: "#3b1c6e",
+                        textColor: "#ffffff",
+                        language: "en-EN",
+                        location: "Oslo, Norway",
+                        locationShortName: "Oslo",
+
+                        lat: 59.9114,
+                        lon: 10.7579,
+                        showDays: 1,
+                        showCelcius: true,
+                        texts: new Translations("en-EN").texts
+                    }
+                }
+                window.addEventListener('message', this.iframeMessageHandler);
+                this.checkOrientation();
+                window.addEventListener('resize', this.checkOrientation);
                 this.fetchWeather();
             }
         };
