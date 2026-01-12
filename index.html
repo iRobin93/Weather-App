@@ -1,3 +1,4 @@
+<!--index.html-->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -13,6 +14,18 @@
 
     <!-- Axios -->
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+    </style>
+
 </head>
 
 <body class="w-full h-full">
@@ -115,8 +128,13 @@
         const App = {
             components: { SettingComponent, WeatherCard },
             template: `
+            <div class="w-full h-full overflow-hidden flex items-center justify-center">
+  <div
+    class="origin-top-left"
+    :style="scaleStyle"
+  >
 
-<div class="min-h-screen flex flex-col items-center justify-start transition-colors duration-300"
+<div class="w-full h-full flex flex-col items-center justify-start transition-colors duration-300"
      :style="{ backgroundColor: contentBlock.properties.appBackgroundColor }">
 
 <!-- Today Weather Panel -->
@@ -168,7 +186,7 @@
   </p>
 
   <!-- Cogwheel -->
-  <div class="fixed top-4 right-4 z-50">
+ <div class="absolute top-4 right-4 z-50">
     <button
       @click="showSettings = !showSettings"
       class="p-2 bg-white bg-opacity-20 backdrop-blur-md rounded-full hover:bg-opacity-40 transition"
@@ -192,6 +210,8 @@
   </div>
 
 </div>
+  </div>
+</div>
 `
             ,
             data() {
@@ -202,12 +222,21 @@
                     showSettings: false,
                     contentBlock: { properties: {} },
                     orientation: null,
+                    scale: 1
 
                 };
             },
             computed: {
                 todayWeather() {
                     return this.weather && this.weather.length ? this.weather[0] : null
+                },
+                scaleStyle() {
+                    return {
+                        width: '1920px',
+                        height: '1080px',
+                        transform: `scale(${this.scale})`,
+                        transformOrigin: 'top left'
+                    }
                 },
                 todayWeekDay() {
                     if (!this.todayWeather) return ''
@@ -268,6 +297,11 @@
                         this.loading = false;
                     }
                 },
+                updateScale() {
+                    const scaleX = window.innerWidth / 1920
+                    const scaleY = window.innerHeight / 1080
+                    this.scale = Math.min(scaleX, scaleY)
+                },
 
                 async resolveLocation(query) {
                     if (!query) return null;
@@ -321,7 +355,7 @@
                         this.error = this.contentBlock.properties.texts.PlaceNotFoundError;
                         return;
                     }
-                    
+
                     this.fetchWeather();
                 },
                 checkOrientation() {
@@ -358,7 +392,14 @@
                 window.addEventListener('message', this.iframeMessageHandler);
                 this.checkOrientation();
                 window.addEventListener('resize', this.checkOrientation);
+                this.updateScale()
+                window.addEventListener('resize', this.updateScale)
                 this.fetchWeather();
+            },
+            beforeUnmount() {
+                window.removeEventListener('resize', this.updateScale)
+                window.removeEventListener('resize', this.checkOrientation)
+                window.removeEventListener('message', this.iframeMessageHandler)
             }
         };
 
