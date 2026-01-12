@@ -15,7 +15,7 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 
-<body class="min-h-screen">
+<body class="w-full h-full">
 
     <div id="app"></div>
 
@@ -315,11 +315,13 @@
                     }
                 },
                 async handleNewSettings() {
+                    this.contentBlock.properties.texts = new Translations(this.contentBlock.properties.language).texts
                     const resolved = await this.resolveLocation(this.contentBlock.properties.location);
                     if (!resolved) {
                         this.error = this.contentBlock.properties.texts.PlaceNotFoundError;
                         return;
                     }
+                    
                     this.fetchWeather();
                 },
                 checkOrientation() {
