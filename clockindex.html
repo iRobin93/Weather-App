@@ -1,553 +1,511 @@
 <!--clockindex.html-->
 <!DOCTYPE html>
 <html class="w-full h-full">
-	<head>
-		<meta charset="UTF-8">
-		<script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
-		<link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
-	</head>
-	<body class="w-full h-full">
-		<div 
-			id="app"
-			class="w-full h-full">
-			
-			<div 
-				v-if="contentBlock && contentBlock.properties"
-				:style="{
+
+<head>
+	<meta charset="UTF-8">
+	<script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
+	<link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+</head>
+
+<body class="w-full h-full">
+	<div id="app" class="w-full h-full">
+
+		<div v-if="contentBlock && contentBlock.properties" :style="{
 					'background-color': contentBlock.properties.backgroundColor ? contentBlock.properties.backgroundColor : 'transparent',
 					'color': contentBlock.properties.textColor ? contentBlock.properties.textColor : 'white'
-				}"
-				class="w-full h-full p-2 tracking-wider flex items-center justify-center">
-				
-				<template v-if="contentBlock.properties.type == 'digital'">
-					<div 
-						v-if="orientation == 'landscape'"
-						class="leading-none items-center"
-						:class="contentBlock.properties.showFullDate ? '' : 'flex'"
-						style="font-size: 14vmin;"> 
-						
-						<div 
-							class="font-semibold"
-							:style="contentBlock.properties.showSeconds ? 'font-size: 120%' : 'font-size: 200%;'">
-							<div>{{ timeFormated }}</div>
+				}" class="w-full h-full p-2 tracking-wider flex items-center justify-center">
+
+			<template v-if="contentBlock.properties.type == 'digital'">
+				<div v-if="orientation == 'landscape'" class="leading-none items-center"
+					:class="contentBlock.properties.showFullDate ? '' : 'flex'" style="font-size: 14vmin;">
+
+					<div class="font-semibold"
+						:style="contentBlock.properties.showSeconds ? 'font-size: 120%' : 'font-size: 200%;'">
+						<div>{{ timeFormated }}</div>
+					</div>
+
+					<div v-if="!contentBlock.properties.showFullDate" class="uppercase text-center"
+						style="margin-left: 5%;">
+
+						<div :style="weekdayFormated.length < 4 ? 'font-size: 60%;' : 'font-size: 50%;'">
+
+							{{ weekdayFormated }}
 						</div>
-						
-						<div 
-							v-if="!contentBlock.properties.showFullDate"
-							class="uppercase text-center"
-							style="margin-left: 5%;">
-							
-							<div 
-								:style="weekdayFormated.length < 4 ? 'font-size: 60%;' : 'font-size: 50%;'">
-								
-								{{ weekdayFormated }}
-							</div>
-							<div 
-								class="font-semibold"
-								style="font-size: 100%">
-								
-								{{ dateFormated }}
-							</div>
-						</div>
-						<div 
-							v-else
-							class="uppercase text-center mt-1">
-							
-							<div style="font-size: 40%;">
-								<span class="font-semibold">{{weekdayFormatedFull}}</span> {{ dateFullFormated }}
-							</div>
+						<div class="font-semibold" style="font-size: 100%">
+
+							{{ dateFormated }}
 						</div>
 					</div>
-					
-					<div 
-						v-if="orientation == 'portrait'"
-						class="leading-none"
-						style="font-size: 18vh;"> 
-						
-						<div 
-							class="uppercase flex items-center justify-center"
-							style="font-size: 60%">
-							
-							<div class="">
-								{{ weekdayFormated }}
-							</div>
-							<div 
-								class="font-semibold"
-								style="font-size: 100%; margin-left: 3%">
-								
-								{{ dateFormated }}
-							</div>
-						</div>
-						
-						<div class="flex items-center justify-center">
-							<div 
-								class="font-semibold"
-								:style="timeFormated.split(':').length > 2 || timeFormated.split('.').length > 2 ? 'font-size: 140%;' : 'font-size: 200%;'">
-								
-								<div v-if="timeFormated.includes(':')">
-									<div
-										v-for="(timePart, timePartIndex) in timeFormated.split(':')"
-										:key="'timePartIndex'+timePartIndex">
-										
-										<div style="line-height: .9;">{{ timePart }}</div>
-									</div>
-								</div>
-								<div v-else-if="timeFormated.includes('.')">
-									<div
-										v-for="(timePart, timePartIndex) in timeFormated.split('.')"
-										:key="'timePartIndex'+timePartIndex">
-										
-										<div style="line-height: .9;">{{ timePart }}</div>
-									</div>
-								</div>
-								<div v-else>{{ timeFormated }}</div>
-							</div>
+					<div v-else class="uppercase text-center mt-1">
+
+						<div style="font-size: 40%;">
+							<span class="font-semibold">{{weekdayFormatedFull}}</span> {{ dateFullFormated }}
 						</div>
 					</div>
-				</template>
-				
-				<template v-if="contentBlock.properties.type == 'analog'">
-					<div class=""> 
-						<div 
-							class="relative rounded-full overflow-hidden mx-auto"
-							style="width: 60vmin; height: 60vmin;"
-							:style="{
+				</div>
+
+				<div v-if="orientation == 'portrait'" class="leading-none" style="font-size: 18vh;">
+
+					<div class="uppercase flex items-center justify-center" style="font-size: 60%">
+
+						<div class="">
+							{{ weekdayFormated }}
+						</div>
+						<div class="font-semibold" style="font-size: 100%; margin-left: 3%">
+
+							{{ dateFormated }}
+						</div>
+					</div>
+
+					<div class="flex items-center justify-center">
+						<div class="font-semibold"
+							:style="timeFormated.split(':').length > 2 || timeFormated.split('.').length > 2 ? 'font-size: 140%;' : 'font-size: 200%;'">
+
+							<div v-if="timeFormated.includes(':')">
+								<div v-for="(timePart, timePartIndex) in timeFormated.split(':')"
+									:key="'timePartIndex'+timePartIndex">
+
+									<div style="line-height: .9;">{{ timePart }}</div>
+								</div>
+							</div>
+							<div v-else-if="timeFormated.includes('.')">
+								<div v-for="(timePart, timePartIndex) in timeFormated.split('.')"
+									:key="'timePartIndex'+timePartIndex">
+
+									<div style="line-height: .9;">{{ timePart }}</div>
+								</div>
+							</div>
+							<div v-else>{{ timeFormated }}</div>
+						</div>
+					</div>
+				</div>
+			</template>
+
+			<template v-if="contentBlock.properties.type == 'analog'">
+				<div class="">
+					<div class="relative rounded-full overflow-hidden mx-auto" style="width: 60vmin; height: 60vmin;"
+						:style="{
 								'background-color': contentBlock.properties.watchBackgroundColor ? contentBlock.properties.watchBackgroundColor : 'white',
 							}">
-							
-							<!-- Hour markers -->
-							<div 
-								v-for="hour in 12" 
-								:key="hour" 
-								class="absolute" 
-								:style="getMarkerStyle(hour)">
-							
-							</div>
-							
-							<!-- Center dot -->
-							<div 
-								class="absolute top-1/2 left-1/2 bg-black rounded-full transform -translate-x-1/2 -translate-y-1/2 z-10"
-								style="width: 4vmin; height: 4vmin;"
-								:style="{ 
+
+						<!-- Hour markers -->
+						<div v-for="hour in 12" :key="hour" class="absolute" :style="getMarkerStyle(hour)">
+
+						</div>
+
+						<!-- Center dot -->
+						<div class="absolute top-1/2 left-1/2 bg-black rounded-full transform -translate-x-1/2 -translate-y-1/2 z-10"
+							style="width: 4vmin; height: 4vmin;" :style="{ 
 									backgroundColor: contentBlock.properties.watchHandsColor ? contentBlock.properties.watchHandsColor : '#000'
 								}">
-							</div>
-							
-							<div 
-								id="Hour hand"
-								class="hand rounded-t"
-								:style="{ 
+						</div>
+
+						<div id="Hour hand" class="hand rounded-t" :style="{ 
 									height: '15vmin', 
 									width: '2vmin', 
 									transform: `translateX(-50%) rotate(${hourAngle}deg)`,
 									backgroundColor: contentBlock.properties.watchHandsColor ? contentBlock.properties.watchHandsColor : '#000'
 								}">
-								
-							</div>
-							
-							<div 
-								id="Minute hand"
-								class="hand bg-black rounded-t"
-								:style="{ 
+
+						</div>
+
+						<div id="Minute hand" class="hand bg-black rounded-t" :style="{ 
 									height: '22vmin', 
 									width: '1vmin', 
 									transform: `translateX(-50%) rotate(${minuteAngle}deg)`,
 									backgroundColor: contentBlock.properties.watchHandsColor ? contentBlock.properties.watchHandsColor : '#000'
 								}">
-								
-							</div>
-							
-							<div 
-								id="Seconds hand"
-								class="hand bg-black rounded-t"
-								:class="{ 'no-transition': noTransition }"
-								:style="{ 
+
+						</div>
+
+						<div id="Seconds hand" class="hand bg-black rounded-t"
+							:class="{ 'no-transition': noTransition }" :style="{ 
 									height: '25vmin', 
 									width: '.5vmin', 
 									transform: `translateX(-50%) rotate(${secondAngle}deg)`,
 									backgroundColor: contentBlock.properties.watchHandsColor ? contentBlock.properties.watchHandsColor : '#000'
 								}">
-								
-							</div>
-						</div>
-						
-						<div 
-							class="uppercase text-center"
-							style="margin-top: 4vmin; font-size: 8vmin;">
-							
-							<div>
-								<span class="font-semibold">{{weekdayFormatedFull}}</span> {{ dateFullFormated }}
-							</div>
-						</div>
 
+						</div>
 					</div>
-				</template>
-				
-			</div>
+
+					<div class="uppercase text-center" style="margin-top: 4vmin; font-size: 8vmin;">
+
+						<div>
+							<span class="font-semibold">{{weekdayFormatedFull}}</span> {{ dateFullFormated }}
+						</div>
+					</div>
+
+				</div>
+			</template>
+
 		</div>
-		<script>
-			var demo = new Vue({
-				el: "#app",
-				
-				computed: {
-					language() {
-						try {
-							return this.contentBlock.properties.language;
-						}
-						catch (error) {
-							console.log('no language property in content block');
-						}
-						
-						return 'en-US'; // default
-					},
-					
-					timezone() {
-						try {
-							return this.contentBlock.properties.timezone;
-						}
-						catch (error) {
-							console.log('no timezone property in content block');
-						}
-						
-						return ''; // default
-					},
-					
-					slideDuration() {
-						try {
-							return Number(this.contentBlock.properties.slideDuration);
-						}
-						catch (error) {
-							console.log('no slide duration property in content block');
-						}
-						
-						return 8000; // default
-					},
-					
-					timeFormated(){
-						const options = {
-							hour: '2-digit',
-							minute: '2-digit',
-							// hour12: !this.contentBlock.properties.use24hours, // Use 24-hour format (e.g., 14:30:05)
-						};
-						
-						if (this.contentBlock.properties.showSeconds) {
-							options.second = '2-digit';
-						}
+	</div>
+	<script>
+		var demo = new Vue({
+			el: "#app",
 
-						// Respect configured timezone if provided
-						if (this.timezone) {
-							options.timeZone = this.timezone;
-						}
-
-						const timeFormatter = new Intl.DateTimeFormat(`${this.language}`, options);
-						// const timeFormatter = new Intl.DateTimeFormat(`${this.contentBlock.properties.languageCode}-${this.contentBlock.properties.countryCode}`, options);
-						
-						const formattedTime = timeFormatter.format( this.now );
-						return formattedTime;
-					},
-					
-					weekdayFormated(){
-						const today = this.now; 
-						// const locale = `${this.contentBlock.properties.languageCode}-${this.contentBlock.properties.countryCode}`;
-						const locale = `${this.language}`;
-						
-						const options = {
-							weekday: 'short',
-						};
-
-						if (this.timezone) {
-							options.timeZone = this.timezone;
-						}
-
-						const formatter = new Intl.DateTimeFormat(locale, options);
-						return formatter.format(today).replace('.','');
-					},
-					
-					weekdayFormatedFull(){
-						const today = this.now; 
-						// const locale = `${this.contentBlock.properties.languageCode}-${this.contentBlock.properties.countryCode}`;
-						const locale = `${this.language}`;
-						
-						const options = {
-							weekday: 'long',
-						};
-
-						if (this.timezone) {
-							options.timeZone = this.timezone;
-						}
-
-						const formatter = new Intl.DateTimeFormat(locale, options);
-						return formatter.format(today).replace('.','');
-					},
-					
-					dateFormated(){
-						const today = this.now; 
-						// const locale = `${this.contentBlock.properties.languageCode}-${this.contentBlock.properties.countryCode}`;
-						const locale = `${this.language}`;
-						
-						const options = {
-							day: '2-digit'
-						};
-						
-						if (this.timezone) {
-							options.timeZone = this.timezone;
-						}
-
-						const formatter = new Intl.DateTimeFormat(locale, options);
-						return formatter.format(today).replace('.','');
-					},
-					
-					dateFullFormated(){
-						const today = this.now; 
-						const locale = `${this.language}`;
-						// const locale = `${this.contentBlock.properties.languageCode}-${this.contentBlock.properties.countryCode}`;
-						
-						const options = {
-							// dateStyle: 'full',
-							month: 'long',
-    						day: 'numeric',
-						};
-
-						if (this.timezone) {
-							options.timeZone = this.timezone;
-						}
-
-						const formatter = new Intl.DateTimeFormat(locale, options);
-						return formatter.format(today);
-					},
-					
-					secondAngle() {
-						const parts = this.getTimeParts(this.now);
-						const s = parseInt(parts.second) || 0;
-						return s * 6;
-					},
-					
-					minuteAngle() {
-						const parts = this.getTimeParts(this.now);
-						const m = parseInt(parts.minute) || 0;
-						const s = parseInt(parts.second) || 0;
-						return m * 6 + s * 0.1;
-					},
-					
-					hourAngle() {
-						const parts = this.getTimeParts(this.now);
-						const h = parseInt(parts.hour) || 0;
-						const m = parseInt(parts.minute) || 0;
-						return (h % 12) * 30 + m * 0.5;
-					},
-					
-					noTransition() {
-						const currentSecond = parseInt(this.getTimeParts(this.now).second) || 0;
-						return currentSecond === 0 && this.prevSecond === 59;
-					}
-				},
-				
-				data: function () {
-					return {
-						contentBlock: null,
-						slideshowInterval: null,
-						now: new Date(),
-						timeInterval: null,
-						orientation: null,
-						prevSecond: new Date().getSeconds()
-					}
-				},
-
-				methods: {
-					getTimeParts(date) {
-						try {
-							var d = date || new Date();
-							
-							// If timezone is specified, try to use it
-							if (this.timezone) {
-								try {
-									var opts = { 
-										hour: 'numeric', 
-										minute: 'numeric', 
-										second: 'numeric', 
-										hour12: false,
-										timeZone: this.timezone
-									};
-									var formatter = new Intl.DateTimeFormat(this.language, opts);
-									var timeStr = formatter.format(d);
-									
-									// Parse the formatted string (format: "HH:MM:SS" or "H:M:S")
-									var timeParts = timeStr.split(':');
-									if (timeParts.length >= 3) {
-										return {
-											hour: timeParts[0].padStart(2, '0'),
-											minute: timeParts[1].padStart(2, '0'),
-											second: timeParts[2].padStart(2, '0')
-										};
-									}
-								}
-								catch (e) {
-									// Fallback if timezone conversion fails
-								}
-							}
-							
-							// Fallback: use local time
-							var h = d.getHours();
-							var m = d.getMinutes();
-							var s = d.getSeconds();
-							
-							return {
-								hour: (h < 10 ? '0' : '') + h,
-								minute: (m < 10 ? '0' : '') + m,
-								second: (s < 10 ? '0' : '') + s
-							};
-						}
-						catch (e) {
-							return { hour: '00', minute: '00', second: '00' };
-						}
-					},
-					
-					iframeMessageHandler(e) {
-						if (e && e.data) {
-							if (e.data == '{}') {
-								this.contentBlock = {};
-								this.slideshowStop();
-								
-								this.timeStop();
-							}
-							else {
-								console.log('e', e);
-								
-								const contentBlock = JSON.parse(e.data);
-								this.contentBlock = contentBlock;
-								
-								if (!this.slideshowInterval) {
-									this.slideshowStart();
-								}
-								
-							}
-						}
-					},
-					
-					slideshowStart() {
-						console.log('slideshowStart watch');
-						
-						this.timeInterval = setInterval(() => {
-							this.prevSecond = parseInt(this.getTimeParts(this.now).second) || 0;
-							this.now = new Date();
-						}, 1000 );
-						
-						this.slideshowInterval = setInterval(() => {
-							// new "next"
-							parent.postMessage({
-								contentBlockId: this.contentBlock.contentBlockId,
-								data: 'next'
-							}, '*');
-						}, this.slideDuration);
-					},
-
-					slideshowStop() {
-						clearInterval(this.slideshowInterval);
-						this.slideshowInterval = null;
-					},
-					
-					timeStop() {
-						clearInterval(this.timeInterval);
-						this.timeInterval = null;
-					},
-					
-					checkOrientation() {
-						if (window.innerHeight > window.innerWidth) {
-							this.orientation = 'portrait';
-						} 
-						else {
-							this.orientation = 'landscape';
-						}
-					},
-					
-					getMarkerStyle(hour) {
-						const angle = hour * 30;
-						const reseponse = {
-							top: '0px',
-							left: '50%',
-							transform: 'translateX(-50%) rotate('+angle+'deg)',
-							transformOrigin: 'center 30vmin',
-							width: '1vmin',
-							height: '3vmin',
-							backgroundColor: this.contentBlock && this.contentBlock.properties && this.contentBlock.properties.watchHandsColor ? this.contentBlock.properties.watchHandsColor : '#000'
-						};
-						
-						return reseponse;
-					}
-				},
-				mounted() {
-					window.addEventListener('message', this.iframeMessageHandler);
-					this.iframeMessageHandler(event);
-					
-					this.checkOrientation();
-					window.addEventListener('resize', this.checkOrientation);
-					// initialize prevSecond using timezone-aware seconds
+			computed: {
+				language() {
 					try {
-						this.prevSecond = parseInt(this.getTimeParts(this.now).second) || 0;
+						return this.contentBlock.properties.language;
 					}
-					catch (e) {}
-					
-					this.contentBlock = {
-						properties: {
-							backgroundColor: "rgba(20,20,20, 1)",
-							textColor: "rgba(255, 255, 255, 1)",
-							watchBackgroundColor: "rgba(250,250,255, 1)",
-							watchHandsColor: "rgba(0,0,0, 1)",
-							type: "analog",
-							slideDuration: 10 * 1000,
-							language: 'nb-NO',
-							// example timezone: 'Europe/Oslo', 'America/New_York', etc.
-							timezone: 'Europe/Oslo',
-							showSeconds: true, // wip
-							showFullDate: false,
-						}
+					catch (error) {
+						console.log('no language property in content block');
+					}
+
+					return 'en-US'; // default
+				},
+
+				timezone() {
+					try {
+						return this.contentBlock.properties.timezone;
+					}
+					catch (error) {
+						console.log('no timezone property in content block');
+					}
+
+					return ''; // default
+				},
+
+				slideDuration() {
+					try {
+						return Number(this.contentBlock.properties.slideDuration);
+					}
+					catch (error) {
+						console.log('no slide duration property in content block');
+					}
+
+					return 8000; // default
+				},
+
+				timeFormated() {
+					const options = {
+						hour: '2-digit',
+						minute: '2-digit',
+						// hour12: !this.contentBlock.properties.use24hours, // Use 24-hour format (e.g., 14:30:05)
 					};
-					
-					this.slideshowStart();
+
+					if (this.contentBlock.properties.showSeconds) {
+						options.second = '2-digit';
+					}
+
+					// Respect configured timezone if provided
+					if (this.timezone) {
+						options.timeZone = this.timezone;
+					}
+
+					const timeFormatter = new Intl.DateTimeFormat(`${this.language}`, options);
+					// const timeFormatter = new Intl.DateTimeFormat(`${this.contentBlock.properties.languageCode}-${this.contentBlock.properties.countryCode}`, options);
+
+					const formattedTime = timeFormatter.format(this.now);
+					return formattedTime;
 				},
-				beforeDestroy() {
-					try {
-						window.removeEventListener('message', this.iframeMessageHandler);
+
+				weekdayFormated() {
+					const today = this.now;
+					// const locale = `${this.contentBlock.properties.languageCode}-${this.contentBlock.properties.countryCode}`;
+					const locale = `${this.language}`;
+
+					const options = {
+						weekday: 'short',
+					};
+
+					if (this.timezone) {
+						options.timeZone = this.timezone;
 					}
-					catch (e) {
-						// console.log('no dom element listener to destroy.');
+
+					const formatter = new Intl.DateTimeFormat(locale, options);
+					return formatter.format(today).replace('.', '');
+				},
+
+				weekdayFormatedFull() {
+					const today = this.now;
+					// const locale = `${this.contentBlock.properties.languageCode}-${this.contentBlock.properties.countryCode}`;
+					const locale = `${this.language}`;
+
+					const options = {
+						weekday: 'long',
+					};
+
+					if (this.timezone) {
+						options.timeZone = this.timezone;
 					}
-					
-					
-					try {
-						window.removeEventListener('resize', this.checkOrientation);
+
+					const formatter = new Intl.DateTimeFormat(locale, options);
+					return formatter.format(today).replace('.', '');
+				},
+
+				dateFormated() {
+					const today = this.now;
+					// const locale = `${this.contentBlock.properties.languageCode}-${this.contentBlock.properties.countryCode}`;
+					const locale = `${this.language}`;
+
+					const options = {
+						day: '2-digit'
+					};
+
+					if (this.timezone) {
+						options.timeZone = this.timezone;
 					}
-					catch (e) {
-						// console.log('no dom element listener to destroy.');
+
+					const formatter = new Intl.DateTimeFormat(locale, options);
+					return formatter.format(today).replace('.', '');
+				},
+
+				dateFullFormated() {
+					const today = this.now;
+					const locale = `${this.language}`;
+					// const locale = `${this.contentBlock.properties.languageCode}-${this.contentBlock.properties.countryCode}`;
+
+					const options = {
+						// dateStyle: 'full',
+						month: 'long',
+						day: 'numeric',
+					};
+
+					if (this.timezone) {
+						options.timeZone = this.timezone;
 					}
+
+					const formatter = new Intl.DateTimeFormat(locale, options);
+					return formatter.format(today);
+				},
+
+				secondAngle() {
+					const parts = this.getTimeParts(this.now);
+					const s = parseInt(parts.second) || 0;
+					return s * 6;
+				},
+
+				minuteAngle() {
+					const parts = this.getTimeParts(this.now);
+					const m = parseInt(parts.minute) || 0;
+					const s = parseInt(parts.second) || 0;
+					return m * 6 + s * 0.1;
+				},
+
+				hourAngle() {
+					const parts = this.getTimeParts(this.now);
+					const h = parseInt(parts.hour) || 0;
+					const m = parseInt(parts.minute) || 0;
+					return (h % 12) * 30 + m * 0.5;
+				},
+
+				noTransition() {
+					const currentSecond = parseInt(this.getTimeParts(this.now).second) || 0;
+					return currentSecond === 0 && this.prevSecond === 59;
 				}
-			});
-			
-		</script>
-		
-		<style>
-			@import url('https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght,XOPQ,XTRA,YOPQ,YTDE,YTFI,YTLC,YTUC@8..144,100..1000,96,468,79,-203,738,514,712&display=swap');
-			
-			html,
-			body {
-				margin: 0;
-				padding: 0;
-				overflow: hidden;
-				/* font-size: 2vmin; */
-				font-family: 'Roboto Flex', sans-serif;
+			},
+
+			data: function () {
+				return {
+					contentBlock: null,
+					slideshowInterval: null,
+					now: new Date(),
+					timeInterval: null,
+					orientation: null,
+					prevSecond: new Date().getSeconds()
+				}
+			},
+
+			methods: {
+				getTimeParts(date) {
+					try {
+						var d = date || new Date();
+
+						// If timezone is specified, try to use it
+						if (this.timezone) {
+							try {
+								var opts = {
+									hour: 'numeric',
+									minute: 'numeric',
+									second: 'numeric',
+									hour12: false,
+									timeZone: this.timezone
+								};
+								var formatter = new Intl.DateTimeFormat(this.language, opts);
+								var timeStr = formatter.format(d);
+
+								// Parse the formatted string (format: "HH:MM:SS" or "H:M:S")
+								var timeParts = timeStr.split(':');
+								if (timeParts.length >= 3) {
+									return {
+										hour: timeParts[0].padStart(2, '0'),
+										minute: timeParts[1].padStart(2, '0'),
+										second: timeParts[2].padStart(2, '0')
+									};
+								}
+							}
+							catch (e) {
+								// Fallback if timezone conversion fails
+							}
+						}
+
+						// Fallback: use local time
+						var h = d.getHours();
+						var m = d.getMinutes();
+						var s = d.getSeconds();
+
+						return {
+							hour: (h < 10 ? '0' : '') + h,
+							minute: (m < 10 ? '0' : '') + m,
+							second: (s < 10 ? '0' : '') + s
+						};
+					}
+					catch (e) {
+						return { hour: '00', minute: '00', second: '00' };
+					}
+				},
+
+				iframeMessageHandler(e) {
+					if (e && e.data) {
+						if (e.data == '{}') {
+							this.contentBlock = {};
+							this.slideshowStop();
+
+							this.timeStop();
+						}
+						else {
+							console.log('e', e);
+
+							const contentBlock = JSON.parse(e.data);
+							this.contentBlock = contentBlock;
+
+							if (!this.slideshowInterval) {
+								this.slideshowStart();
+							}
+
+						}
+					}
+				},
+
+				slideshowStart() {
+					console.log('slideshowStart watch');
+
+					this.timeInterval = setInterval(() => {
+						this.prevSecond = parseInt(this.getTimeParts(this.now).second) || 0;
+						this.now = new Date();
+					}, 1000);
+
+					this.slideshowInterval = setInterval(() => {
+						// new "next"
+						parent.postMessage({
+							contentBlockId: this.contentBlock.contentBlockId,
+							data: 'next'
+						}, '*');
+					}, this.slideDuration);
+				},
+
+				slideshowStop() {
+					clearInterval(this.slideshowInterval);
+					this.slideshowInterval = null;
+				},
+
+				timeStop() {
+					clearInterval(this.timeInterval);
+					this.timeInterval = null;
+				},
+
+				checkOrientation() {
+					if (window.innerHeight > window.innerWidth) {
+						this.orientation = 'portrait';
+					}
+					else {
+						this.orientation = 'landscape';
+					}
+				},
+
+				getMarkerStyle(hour) {
+					const angle = hour * 30;
+					const reseponse = {
+						top: '0px',
+						left: '50%',
+						transform: 'translateX(-50%) rotate(' + angle + 'deg)',
+						transformOrigin: 'center 30vmin',
+						width: '1vmin',
+						height: '3vmin',
+						backgroundColor: this.contentBlock && this.contentBlock.properties && this.contentBlock.properties.watchHandsColor ? this.contentBlock.properties.watchHandsColor : '#000'
+					};
+
+					return reseponse;
+				}
+			},
+			mounted() {
+				window.addEventListener('message', this.iframeMessageHandler);
+				this.iframeMessageHandler(event);
+
+				this.checkOrientation();
+				window.addEventListener('resize', this.checkOrientation);
+				// initialize prevSecond using timezone-aware seconds
+				try {
+					this.prevSecond = parseInt(this.getTimeParts(this.now).second) || 0;
+				}
+				catch (e) { }
+
+				this.contentBlock = {
+					properties: {
+						backgroundColor: "rgba(20,20,20, 1)",
+						textColor: "rgba(255, 255, 255, 1)",
+						watchBackgroundColor: "rgba(250,250,255, 1)",
+						watchHandsColor: "rgba(0,0,0, 1)",
+						type: "analog",
+						slideDuration: 10 * 1000,
+						language: 'nb-NO',
+						// example timezone: 'Europe/Oslo', 'America/New_York', etc.
+						timezone: 'Europe/Oslo',
+						showSeconds: true, // wip
+						showFullDate: false,
+					}
+				};
+
+				this.slideshowStart();
+			},
+			beforeDestroy() {
+				try {
+					window.removeEventListener('message', this.iframeMessageHandler);
+				}
+				catch (e) {
+					// console.log('no dom element listener to destroy.');
+				}
+
+
+				try {
+					window.removeEventListener('resize', this.checkOrientation);
+				}
+				catch (e) {
+					// console.log('no dom element listener to destroy.');
+				}
 			}
-			
-			.hand {
-				position: absolute;
-				bottom: 50%;
-				left: 50%;
-				transform-origin: bottom center;
-				transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-			}
-			
-			.hand.no-transition {
-				transition: none;
-			}
+		});
+
+	</script>
+
+	<style>
+		@import url('https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght,XOPQ,XTRA,YOPQ,YTDE,YTFI,YTLC,YTUC@8..144,100..1000,96,468,79,-203,738,514,712&display=swap');
+
+		html,
+		body {
+			margin: 0;
+			padding: 0;
+			overflow: hidden;
+			/* font-size: 2vmin; */
+			font-family: 'Roboto Flex', sans-serif;
+		}
+
+		.hand {
+			position: absolute;
+			bottom: 50%;
+			left: 50%;
+			transform-origin: bottom center;
+			transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		}
+
+		.hand.no-transition {
+			transition: none;
+		}
 	</style>
-	</body>
+</body>
+
 </html>
