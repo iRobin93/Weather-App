@@ -47,31 +47,65 @@
                             :style="{ backgroundColor: contentBlock.properties.cardBackgroundColor, color: contentBlock.properties.textColor, width: '180px' }">
 
                         <h2 class="text-xl font-semibold">
-                        {{ capitalizeFirst(new Date(day.date).toLocaleDateString(contentBlock.properties.language.split('-')[0], { weekday: 'short' })) }}
+  
+                        {{ displayWeekDay }}
+                                                   <img
+                                :src="weatherIconSrc"
+                                :alt="day.symbolCode"
+                                class="mx-auto w-16 h-16 my-2"
+                                />
                         </h2>
-                        <p class="text-3xl font-bold">{{ day.temperature }}°C</p>
-                        <p class="text-lg">{{ contentBlock.properties.texts.wind }}: {{ day.wind }} m/s</p>
-                        <p class="capitalize">{{ day.condition }}</p>
+                        <p class="text-2xl py-4">{{ displayTemperature }}</p>
                         </div>
                         
 
-                        <div v-if="orientation == 'portrait'" class="rounded-2xl p-6 shadow-2xl text-center transform hover:scale-105 transition-transform duration-300 flex-shrink-0"
-                            :style="{ backgroundColor: contentBlock.properties.cardBackgroundColor, color: contentBlock.properties.textColor, width: '180px' }">
+<div
+  v-if="orientation == 'portrait'"
+  class="rounded-2xl p-6 shadow-2xl transform hover:scale-105 transition-transform duration-300 flex items-center space-x-4 flex-shrink-0"
+  :style="{ backgroundColor: contentBlock.properties.cardBackgroundColor, color: contentBlock.properties.textColor, width: '100%' }"
+>
+  <!-- Left: Icon -->
+  <h2 class="text-xl font-semibold">{{ displayWeekDay }}</h2>
+  <img
+    :src="weatherIconSrc"
+    :alt="day.symbolCode"
+    class="w-16 h-16"
+  />
 
-                        <h2 class="text-xl font-semibold">
-                        {{ capitalizeFirst(new Date(day.date).toLocaleDateString(contentBlock.properties.language.split('-')[0], { weekday: 'short' })) }}
-                        </h2>
-                        <p class="text-3xl font-bold">{{ day.temperature }}°C</p>
-                        <p class="text-lg">{{ contentBlock.properties.texts.wind }}: {{ day.wind }} m/s</p>
-                        <p class="capitalize">{{ day.condition }}</p>
+  <!-- Right: Text -->
+  <div class="flex flex-col">
+    
+    <p class="text-2xl py-2">{{ displayTemperature }}</p>
+  </div>
+</div>
+
                         </div>
 
 
                     `,
+            computed: {
+                displayTemperature() {
+                    if (this.contentBlock.properties.showCelcius) {
+                        return `${this.day.temperature}°C`
+                    }
+                    return `${Math.round(this.day.temperature * 9 / 5 + 32)}°F`
+                }, displayWeekDay() {
+                    if (this.orientation == "landscape")
+                        return this.capitalizeFirst(new Date(this.day.date).toLocaleDateString(this.contentBlock.properties.language.split('-')[0], { weekday: 'short' }))
+                    return this.capitalizeFirst(new Date(this.day.date).toLocaleDateString(this.contentBlock.properties.language.split('-')[0], { weekday: 'long' }))
+                },
+                weatherIconSrc() {
+                    if (!this.day.condition) return ''
+                    if (this.day.condition == "clear")
+                        return `./png/clearsky_day.png`
+                    return `./png/${this.day.condition}.png`
+                }
+
+            },
             methods: {
                 capitalizeFirst(str) {
                     return str.charAt(0).toUpperCase() + str.slice(1).replace('.', '');
-                },
+                }
             }
         };
 
@@ -81,64 +115,84 @@
         const App = {
             components: { SettingComponent, WeatherCard },
             template: `
-                        <div class="min-h-screen flex flex-col items-center justify-center transition-colors duration-300"
-                            :style="{ backgroundColor: contentBlock.properties.appBackgroundColor }">
 
-                        <div class="w-full max-w-md p-6 space-y-6">
+<div class="min-h-screen flex flex-col items-center justify-start transition-colors duration-300"
+     :style="{ backgroundColor: contentBlock.properties.appBackgroundColor }">
+
+<!-- Today Weather Panel -->
+<div v-if="todayWeather"
+     class="w-full max-w-5xl mx-auto flex flex-col sm:flex-row justify-center items-center p-4 sm:p-8 rounded-xl mb-6 space-y-4 sm:space-y-0 sm:space-x-8 lg:space-x-12"
+     :style="{ backgroundColor: contentBlock.properties.appBackgroundColor, color: contentBlock.properties.textColor }">
+
+  <!-- Left: Day & Date -->
+  <div class="flex flex-col items-start space-y-1">
+    <h2 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold">{{ todayWeekDay }}</h2>
+    <h2 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold">{{ contentBlock.properties.locationShortName }}</h2>
+    <p class="text-sm sm:text-base md:text-lg lg:text-xl opacity-70">{{ todayWeather.date }}</p>
+  </div>
+
+  <!-- Center: Temperature & Icon -->
+  <div class="flex items-center space-x-4">
+    <p class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold">{{ todayTemperature }}</p>
+    <img :src="todayIcon" :alt="todayWeather.symbolCode" class="w-20 sm:w-24 md:w-28 lg:w-32 h-20 sm:h-24 md:h-28 lg:h-32" />
+  </div>
+
+  <!-- Right: Additional Info -->
+  <div class="flex flex-col items-end space-y-1 text-right">
+    <p class="text-xs sm:text-sm md:text-base lg:text-lg opacity-80">{{contentBlock.properties.texts.precipitation}}: {{ todayWeather.precipitation || 0 }}%</p>
+    <p class="text-xs sm:text-sm md:text-base lg:text-lg opacity-80">{{contentBlock.properties.texts.humidity}}: {{ todayWeather.humidity || 0 }}%</p>
+    <p class="text-xs sm:text-sm md:text-base lg:text-lg opacity-80">{{contentBlock.properties.texts.wind}}: {{ todayWeather.wind }} km/h</p>
+  </div>
+
+</div>
 
 
-                            <p v-if="loading" class="text-center text-white text-lg">
-                            Loading weather...
-                            </p>
 
-                       <div
-                            v-if="weather"
-                            class="flex gap-4"
-                            :class="orientation === 'portrait'
-                                ? 'flex-col items-center'
-                                : 'flex-row justify-start flex-nowrap'">
+  <!-- Forecast Cards Row -->
+  <div v-if="weather" class="flex gap-6 justify-center" :class="orientation === 'portrait' ? 'flex-col items-center' : 'flex-row flex-nowrap'" >
+    <WeatherCard
+      v-for="day in (weather || []).slice(1, contentBlock.properties.showDays)"
+      :key="day.date"
+      :day="day"
+      :contentBlock="contentBlock"
+      :orientation="orientation"
+    />
+  </div>
 
-                            <WeatherCard
-                                v-for="day in (weather || []).slice(0, contentBlock.properties.showDays)"
-                                :key="day.date"
-                                :day="day"
-                                :contentBlock="contentBlock"
-                                :orientation="orientation"
-                            />
-                        </div>
+  <!-- Loading / Error -->
+  <p v-if="loading" class="text-center text-white text-lg mt-4">
+    Loading weather...
+  </p>
+  <p v-if="error" class="text-center text-red-300 font-semibold mt-4">
+    {{ error }}
+  </p>
 
+  <!-- Cogwheel -->
+  <div class="fixed top-4 right-4 z-50">
+    <button
+      @click="showSettings = !showSettings"
+      class="p-2 bg-white bg-opacity-20 backdrop-blur-md rounded-full hover:bg-opacity-40 transition"
+    >
+      ⚙️
+    </button>
+  </div>
 
+  <!-- Settings Panel -->
+  <div
+    v-if="showSettings"
+    class="fixed top-0 right-0 h-full w-80 bg-black bg-opacity-70 backdrop-blur-md p-6 shadow-xl z-40 overflow-auto"
+  >
+    <SettingComponent
+      :contentBlock="contentBlock"
+      :Translations="Translations"
+      @update:contentBlock="contentBlock = $event"
+      @save="onSettingsSave"
+      @cancel="showSettings = false"
+    />
+  </div>
 
-                        <p v-if="error" class="text-center text-red-300 font-semibold">
-                        {{ error }}
-                        </p>
-                    </div>
-
-                    <!-- Cogwheel -->
-                    <div class="fixed top-4 right-4 z-50">
-                        <button
-                        @click="showSettings = !showSettings"
-                        class="p-2 bg-white bg-opacity-20 backdrop-blur-md rounded-full hover:bg-opacity-40 transition"
-                        >
-                        ⚙️
-                        </button>
-                    </div>
-
-                    <!-- Settings -->
-                    <div
-                        v-if="showSettings"
-                        class="fixed top-0 right-0 h-full w-80 bg-black bg-opacity-70 backdrop-blur-md p-6 shadow-xl z-40 overflow-auto"
-                    >
-                        <SettingComponent
-                        :contentBlock="contentBlock"
-                        :Translations="Translations"
-                        @update:contentBlock="contentBlock = $event"
-                        @save="onSettingsSave"
-                        @cancel="showSettings = false"
-                        />
-                    </div>
-                    </div>
-                    `
+</div>
+`
             ,
             data() {
                 return {
@@ -150,6 +204,28 @@
                     orientation: null,
 
                 };
+            },
+            computed: {
+                todayWeather() {
+                    return this.weather && this.weather.length ? this.weather[0] : null
+                },
+                todayWeekDay() {
+                    if (!this.todayWeather) return ''
+                    const locale = this.contentBlock.properties.language.split('-')[0]
+                    return this.capitalizeFirst(
+                        new Date(this.todayWeather.date).toLocaleDateString(locale, { weekday: 'long' })
+                    )
+                },
+                todayTemperature() {
+                    if (!this.todayWeather) return ''
+                    return this.contentBlock.properties.showCelcius
+                        ? `${this.todayWeather.temperature}°C`
+                        : `${Math.round(this.todayWeather.temperature * 9 / 5 + 32)}°F`
+                },
+                todayIcon() {
+                    if (!this.todayWeather || !this.todayWeather.symbolCode) return './png/cloudy.png'
+                    return `./png/${this.todayWeather.symbolCode}.png`
+                }
             },
             methods: {
                 async fetchWeather() {
@@ -220,15 +296,11 @@
                     return false;
                 },
                 onSettingsSave() {
-                    const resolved = this.resolveLocation(this.contentBlock.properties.location);
-                    if (!resolved) {
-                        this.error = this.contentBlock.properties.texts.PlaceNotFoundError;
-                        return;
-                    }
-                    this.fetchWeather();
+
+                    this.handleNewSettings();
                     this.showSettings = false;
                 },
-                iframeMessageHandler(e) {
+                async iframeMessageHandler(e) {
                     if (e && e.data) {
                         if (e.data == '{}') {
                             this.contentBlock = {};
@@ -238,9 +310,17 @@
 
                             const contentBlock = JSON.parse(e.data);
                             this.contentBlock = contentBlock;
-
+                            this.handleNewSettings();
                         }
                     }
+                },
+                async handleNewSettings() {
+                    const resolved = await this.resolveLocation(this.contentBlock.properties.location);
+                    if (!resolved) {
+                        this.error = this.contentBlock.properties.texts.PlaceNotFoundError;
+                        return;
+                    }
+                    this.fetchWeather();
                 },
                 checkOrientation() {
                     if (window.innerHeight > window.innerWidth) {
@@ -250,6 +330,10 @@
                         this.orientation = 'landscape';
                     }
                 },
+                capitalizeFirst(str) {
+                    return str.charAt(0).toUpperCase() + str.slice(1).replace('.', '')
+                },
+
 
             },
             mounted() {
@@ -264,7 +348,7 @@
 
                         lat: 59.9114,
                         lon: 10.7579,
-                        showDays: 1,
+                        showDays: 2,
                         showCelcius: true,
                         texts: new Translations("en-EN").texts
                     }
