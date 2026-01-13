@@ -154,8 +154,9 @@
                         <div class="flex flex-col items-start justify-center ml-8"
                             :style="{ gap: '1vmin' }">
                             <h2 class="font-bold" style="font-size: 5vmin">{{ todayWeekDay }}</h2>
+                            <h2 class="font-bold" style="font-size: 5vmin">{{ dateFullFormated }}</h2>
                             <h2 class="font-bold" style="font-size: 6vmin">{{ contentBlock.properties.locationShortName }}</h2>
-                            <p class="opacity-70" style="font-size: 3vmin">{{ todayWeather.date }}</p>
+                            
                         </div>
 
                         <!-- Center -->
@@ -189,7 +190,7 @@
                         <!-- Location and Date -->
                         <div class="text-center mb-4">
                                                     <!-- Day Name -->
-                            <h2 class="font-bold mb-4" style="font-size: 5vmin">{{ todayWeekDay }} {{ todayWeather.date }}</h2>
+                            <h2 class="font-bold mb-4" style="font-size: 5vmin">{{ todayWeekDay }} {{ dateFullFormated }}</h2>
                             <p class="opacity-70 mb-4" style="font-size: 5vmin"></p>
                             <h2 class="font-bold" style="font-size: 6vmin">{{ contentBlock.properties.locationShortName }}</h2>
                         </div>
@@ -275,6 +276,16 @@
                 };
             },
             computed: {
+                language() {
+                    try {
+                        return this.contentBlock.properties.language;
+                    }
+                    catch (error) {
+                        console.log('no language property in content block');
+                    }
+
+                    return 'en-US'; // default
+                },
                 todayWeather() {
                     return this.weather && this.weather.length ? this.weather[0] : null
                 },
@@ -294,7 +305,26 @@
                 todayIcon() {
                     if (!this.todayWeather || !this.todayWeather.symbolCode) return './png/cloudy.png'
                     return `./png/${this.todayWeather.symbolCode}.png`
-                }
+                },
+                dateFullFormated() {
+                    const today = this.now;
+                    const locale = `${this.language}`;
+                    // const locale = `${this.contentBlock.properties.languageCode}-${this.contentBlock.properties.countryCode}`;
+
+                    const options = {
+                        // dateStyle: 'full',
+                        month: 'long',
+                        day: 'numeric',
+                    };
+
+                    if (this.timezone) {
+                        options.timeZone = this.timezone;
+                    }
+
+                    const formatter = new Intl.DateTimeFormat(locale, options);
+                    return formatter.format(today);
+                },
+
             },
             methods: {
                 async fetchWeather() {
