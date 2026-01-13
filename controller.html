@@ -25,6 +25,7 @@
             if (showApp) {
                 showApp.onload = () => {
                 showApp.contentWindow.postMessage(
+                    /*
                     JSON.stringify(
                     {
                     properties: {
@@ -40,7 +41,23 @@
                         showDays: 4,
                         showCelcius: true,
                     }
-                    }),
+                    })
+                    */
+
+                    JSON.stringify(
+                    {
+                    properties: {
+                        appBackgroundColor: "#2b1055",
+                        cardBackgroundColor: "#3b1c6e",
+                        textColor: "#ffffff",
+                        language: "nb-NO",
+                        location: "Høyenhall",
+                        showDays: 4,
+                        showCelcius: true,
+                    }
+                    })
+                    
+                    ,
                     "*"
                 );
                 };

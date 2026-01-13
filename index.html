@@ -56,25 +56,29 @@
         const WeatherCard = {
             props: { contentBlock: Object, day: Object, orientation: String },
             template: /*HTML*/ `
-                <div v-if="orientation == 'landscape'" 
-                     class="rounded-2xl p-4 shadow-2xl text-center transform hover:scale-105 transition-transform duration-300 flex-shrink-0"
-                     :style="{ 
-                         backgroundColor: contentBlock.properties.cardBackgroundColor, 
-                         color: contentBlock.properties.textColor, 
-                         width: '20vmin',
-                         height: '30vmin'
-                     }">
+                <div v-if="orientation == 'landscape'"
+                    class="rounded-2xl shadow-2xl text-center
+                            flex flex-col items-center
+                            flex-shrink-0"
+                    :style="{
+                        gap: '1.5vmin',
+                        backgroundColor: contentBlock.properties.cardBackgroundColor, 
+                        color: contentBlock.properties.textColor, 
+                        width: '20vmin',
+                        height: '30vmin',
+                        padding: '2vmin'
+                    }">
 
-                    <h2 class="font-semibold mb-2" style="font-size: 3vmin; min-height: 6vmin">
+                    <h2 class="font-semibold" style="font-size: 3vmin">                    
                         {{ displayWeekDay }}
                     </h2>
                     <img
                         :src="weatherIconSrc"
                         :alt="day.symbolCode"
-                        class="mx-auto mb-4"
+                        class="mx-auto"
                         style="width: 12vmin; height: 12vmin;"
                     />
-                    <p class="font-bold" style="font-size: 4.5vmin; line-height: 1">{{ displayTemperature }}</p>
+                    <p class="font-bold" style="font-size: 3vmin; line-height: 1">{{ displayTemperature }}</p>
                 </div>
 
                 <div v-if="orientation == 'portrait'"
@@ -141,29 +145,39 @@
                         color: contentBlock.properties.textColor 
                     }">
 
-                    <!-- Today Weather Panel -->
-                    <div v-if="todayWeather && orientation === 'landscape'"
-                        class="flex justify-between items-center p-4 rounded-xl flex-shrink-0"
-                        style="height: 50vh">
-                        
-                        <!-- Left: Day & Date -->
-                        <div class="flex flex-col items-start justify-center space-y-2 ml-8" style="height: 100%">
+                        <!-- Today Weather Panel -->
+                        <div v-if="todayWeather && orientation === 'landscape'"
+                            class="flex items-center justify-center p-4 rounded-xl flex-shrink-0"
+                            :style="{ height: '50vh', gap: '15vmin' }">
+
+                        <!-- Left -->
+                        <div class="flex flex-col items-start justify-center ml-8"
+                            :style="{ gap: '1vmin' }">
                             <h2 class="font-bold" style="font-size: 5vmin">{{ todayWeekDay }}</h2>
                             <h2 class="font-bold" style="font-size: 6vmin">{{ contentBlock.properties.locationShortName }}</h2>
                             <p class="opacity-70" style="font-size: 3vmin">{{ todayWeather.date }}</p>
                         </div>
 
-                        <!-- Center: Temperature & Icon -->
-                        <div class="flex items-center justify-center space-x-6" style="height: 100%">
-                            <p class="font-extrabold" style="font-size: 16vmin">{{ todayTemperature }}</p>
-                            <img :src="todayIcon" :alt="todayWeather.symbolCode" style="width: 25vmin; height: 25vmin;" />
+                        <!-- Center -->
+                        <div class="flex items-center justify-center"
+                            :style="{ gap: '3vmin' }">
+                            <p class="font-extrabold" style="font-size: 6vmin">{{ todayTemperature }}</p>
+                            <img :src="todayIcon"
+                                style="width: 25vmin; height: 25vmin;" />
                         </div>
 
                         <!-- Right: Additional Info -->
-                        <div class="flex flex-col items-end justify-center space-y-2 text-right mr-8" style="height: 100%">
-                            <p class="opacity-80" style="font-size: 3vmin">{{contentBlock.properties.texts.precipitation}}: {{ todayWeather.precipitation || 0 }}%</p>
-                            <p class="opacity-80" style="font-size: 3vmin">{{contentBlock.properties.texts.humidity}}: {{ todayWeather.humidity || 0 }}%</p>
-                            <p class="opacity-80" style="font-size: 3vmin">{{contentBlock.properties.texts.wind}}: {{ todayWeather.wind }} km/h</p>
+                        <div class="flex flex-col items-end justify-center text-right mr-8"
+                            :style="{ gap: '1vmin' }">
+                            <p class="opacity-80" style="font-size: 3vmin">
+                            {{contentBlock.properties.texts.precipitation}}: {{ todayWeather.precipitation || 0 }}%
+                            </p>
+                            <p class="opacity-80" style="font-size: 3vmin">
+                            {{contentBlock.properties.texts.humidity}}: {{ todayWeather.humidity || 0 }}%
+                            </p>
+                            <p class="opacity-80" style="font-size: 3vmin">
+                            {{contentBlock.properties.texts.wind}}: {{ todayWeather.wind }} km/h
+                            </p>
                         </div>
                     </div>
 
@@ -321,7 +335,7 @@
                     }
                 },
                 async resolveLocation(query) {
-                    if (!query) return null;
+                    if (!query) return false;
                     try {
                         const res = await axios.get("https://nominatim.openstreetmap.org/search", {
                             params: {
@@ -366,11 +380,13 @@
                 },
                 async handleNewSettings() {
                     this.contentBlock.properties.texts = new Translations(this.contentBlock.properties.language).texts
-                    const resolved = await this.resolveLocation(this.contentBlock.properties.location);
-                    if (!resolved) {
-                        this.error = this.contentBlock.properties.texts.PlaceNotFoundError;
-                        return;
+                    if (!this.contentBlock.properties.lat || !this.contentBlock.properties.lon) {
+                        const resolved = await this.resolveLocation(this.contentBlock.properties.location);
+                        if (!resolved) {
+                            this.error = this.contentBlock.properties.texts.PlaceNotFoundError;
+                        }
                     }
+
 
                     this.fetchWeather();
                 },
