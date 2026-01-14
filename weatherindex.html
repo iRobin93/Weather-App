@@ -49,7 +49,7 @@
         // -------------------------------
         import { SettingComponent } from "./components/settingComponent.js"
 
-
+        
         // -------------------------------
         // WeatherCard Component
         // -------------------------------
@@ -82,16 +82,16 @@
                 </div>
 
                 <div v-if="orientation == 'portrait'"
-                    class="rounded-2xl p-4 shadow-2xl transform hover:scale-105 transition-transform duration-300 flex items-center justify-between flex-shrink-0 mb-4"
+                    class="rounded-2xl p-4 shadow-2xl transform hover:scale-105 transition-transform duration-300 flex items-center justify-between flex-shrink-0 mb-0"
                     :style="{ 
                         backgroundColor: contentBlock.properties.cardBackgroundColor, 
                         color: contentBlock.properties.textColor, 
-                        width: '90%',
-                        height: '15vmin'
+                        width: '75%',
+                        height: '13vmin'
                     }">
                     
                     <!-- Left: Day -->
-                    <h2 class="font-semibold" style="font-size: 4vmin; width: 30%">{{ displayWeekDay }}</h2>
+                    <h2 class="font-semibold p-10" style="font-size: 4vmin; width: 30%">{{ displayWeekDay }}</h2>
                     
                     <!-- Center: Icon -->
                     <img
@@ -102,14 +102,14 @@
 
                     <!-- Right: Temperature -->
                     <div class="text-right" style="width: 30%">
-                        <p class="font-bold" style="font-size: 5vmin">{{ displayTemperature }}</p>
+                        <p class="font-bold p-10" style="font-size: 5vmin">{{ displayTemperature }}</p>
                     </div>
                 </div>
             `,
             computed: {
                 displayTemperature() {
                     if (this.contentBlock.properties.showCelcius) {
-                        return `${this.day.temperature}°C`
+                        return `${Math.round(this.day.temperature)}°`
                     }
                     return `${Math.round(this.day.temperature * 9 / 5 + 32)}°F`
                 },
@@ -139,11 +139,12 @@
         const App = {
             components: { SettingComponent, WeatherCard },
             template: /*HTML*/ `
-                <div class="w-full h-full flex flex-col"
-                    :style="{ 
-                        backgroundColor: contentBlock.properties.appBackgroundColor, 
-                        color: contentBlock.properties.textColor 
-                    }">
+                    <div class="w-full h-full flex flex-col items-center justify-center"
+                        :style="{ 
+                            backgroundColor: contentBlock.properties.appBackgroundColor, 
+                            color: contentBlock.properties.textColor
+                        }">
+                        <div class="flex flex-col w-full" style="gap: 5vmin;">
 
                         <!-- Today Weather Panel -->
                         <div v-if="todayWeather && orientation === 'landscape'"
@@ -184,37 +185,44 @@
 
                     <!-- Portrait layout for today weather -->
                     <div v-if="todayWeather && orientation === 'portrait'"
-                        class="flex flex-col items-center justify-center p-4 rounded-xl flex-shrink-0"
-                        style="height: 50vh">
+                        class="flex flex-col flex-[0.6] justify-between p-2 rounded-xl w-full">
                         
                         <!-- Location and Date -->
-                        <div class="text-center mb-4">
+                        <div class="text-center mb-2">
                                                     <!-- Day Name -->
-                            <h2 class="font-bold mb-4" style="font-size: 5vmin">{{ todayWeekDay }} {{ dateFullFormated }}</h2>
+                            <h2 style="font-size: 8vmin">{{ todayWeekDay }} {{ dateFullFormated }}</h2>
                             <p class="opacity-70 mb-4" style="font-size: 5vmin"></p>
-                            <h2 class="font-bold" style="font-size: 6vmin">{{ contentBlock.properties.locationShortName }}</h2>
+                            <h2 style="font-size: 6vmin">{{ contentBlock.properties.locationShortName }}</h2>
                         </div>
 
                         <!-- Temperature and Icon Row -->
-                        <div class="flex items-center justify-center space-x-6 mb-4">
-                            <p class="font-extrabold" style="font-size: 14vmin">{{ todayTemperature }}</p>
-                            <img :src="todayIcon" :alt="todayWeather.symbolCode" style="width: 20vmin; height: 20vmin;" />
+                        <div class="flex items-start" style="gap:6vmin">
+                            <p class="font-extrabold" style="font-size: 23vmin;  padding-left:12vmin;">{{ todayTemperature }}</p>
+                            <img :src="todayIcon" :alt="todayWeather.symbolCode" style="width: 20vmin; margin-top:8vmin; height: 20vmin;" />
                         </div>
 
 
-                        
-                        <!-- Weather Details -->
-                        <div class="flex justify-center space-x-8">
-                            <p class="opacity-80" style="font-size: 3vmin">{{contentBlock.properties.texts.precipitation}}: {{ todayWeather.precipitation || 0 }}%</p>
-                            <p class="opacity-80" style="font-size: 3vmin">{{contentBlock.properties.texts.humidity}}: {{ todayWeather.humidity || 0 }}%</p>
-                            <p class="opacity-80" style="font-size: 3vmin">{{contentBlock.properties.texts.wind}}: {{ todayWeather.wind }} km/h</p>
+  
+                        <!-- Weather Details (aligned to forecast start) -->
+                        <div class="w-full flex flex-col items-start" style="padding-left: 15vmin;line-height: 1.2;">
+                            <p class="opacity-80" style="font-size: 5vmin">
+                                {{contentBlock.properties.texts.precipitation}}: {{ todayWeather.precipitation || 0 }}%
+                            </p>
+                            <p class="opacity-80" style="font-size: 5vmin">
+                                {{contentBlock.properties.texts.humidity}}: {{ todayWeather.humidity || 0 }}%
+                            </p>
+                            <p class="opacity-80" style="font-size: 5vmin">
+                                {{contentBlock.properties.texts.wind}}: {{ todayWeather.wind }} km/h
+                            </p>
                         </div>
+
+
+
                     </div>
 
                     <!-- Forecast Cards Container -->
-                    <div v-if="weather" 
-                        class="flex-1 flex items-center justify-center p-4"
-                        :class="orientation === 'portrait' ? 'flex-col' : 'flex-row'">
+                    <div v-if="weather"
+                        class="flex flex-1 items-center justify-center p-4">
                         
                         <div class="flex gap-4"
                             :class="orientation === 'portrait' ? 'flex-col items-center w-full' : 'flex-row justify-center w-full'">
@@ -299,12 +307,12 @@
                 todayTemperature() {
                     if (!this.todayWeather) return ''
                     return this.contentBlock.properties.showCelcius
-                        ? `${this.todayWeather.temperature}°C`
+                        ? `${Math.round(this.todayWeather.temperature)}°`
                         : `${Math.round(this.todayWeather.temperature * 9 / 5 + 32)}°F`
                 },
                 todayIcon() {
-                    if (!this.todayWeather || !this.todayWeather.symbolCode) return './png/cloudy.png'
-                    return `./png/${this.todayWeather.symbolCode}.png`
+                    if (!this.todayWeather.condition) return './png/cloudy.png'
+                    return `./png/${this.todayWeather.condition}.png`
                 },
                 dateFullFormated() {
                     const today = this.now;
@@ -409,6 +417,7 @@
                     }
                 },
                 async handleNewSettings() {
+                    document.getElementById('app').style.backgroundColor = this.contentBlock.properties.appBackgroundColor;
                     this.contentBlock.properties.texts = new Translations(this.contentBlock.properties.language).texts
                     if (!this.contentBlock.properties.lat || !this.contentBlock.properties.lon) {
                         const resolved = await this.resolveLocation(this.contentBlock.properties.location);
@@ -433,10 +442,11 @@
                 }
             },
             mounted() {
+                
                 this.contentBlock = {
                     properties: {
-                        appBackgroundColor: "#2b1055",
-                        cardBackgroundColor: "#3b1c6e",
+                        appBackgroundColor: "#7952b7",
+                        cardBackgroundColor: "#987DC5",
                         textColor: "#ffffff",
                         language: "en-EN",
                         location: "Oslo, Norway",
@@ -448,6 +458,7 @@
                         texts: new Translations("en-EN").texts
                     }
                 }
+                document.getElementById('app').style.backgroundColor = this.contentBlock.properties.appBackgroundColor;
                 window.addEventListener('message', this.iframeMessageHandler);
                 this.checkOrientation();
                 window.addEventListener('resize', this.checkOrientation);
