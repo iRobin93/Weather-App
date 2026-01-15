@@ -5,7 +5,16 @@ import { Translations } from "../translations.js"
 export const SettingComponent = {
     props: { contentBlock: Object },
     emits: ["update:contentBlock", "save", "cancel"],
-    data() { return { localContent: { ...this.contentBlock.properties } } },
+    data() {
+        const props = this.contentBlock.properties
+
+        return {
+            localContent: {
+                ...props,
+                perspective: props.perspective ?? ""
+            }
+        }
+    },
     template: /*HTML*/ `
     <div class="bg-white bg-opacity-10 backdrop-blur-md p-4 rounded-xl space-y-4 text-white">
         <h2 class="text-lg font-semibold">{{ localContent.texts.settings }}</h2>
@@ -49,6 +58,20 @@ export const SettingComponent = {
             <input type="checkbox" v-model="localContent.showCelcius"/>
         </div>
 
+        <div class="flex items-center space-x-2">
+            <label>{{ localContent.texts.showTempCharacter }}:</label>
+            <input type="checkbox" v-model="localContent.showTempCharacter"/>
+        </div>
+
+        <div>
+            <label class="block mb-1">{{ localContent.texts.forcePerspective }}:</label>
+            <select v-model="localContent.perspective" class="w-full p-2 rounded bg-gray-800 text-white">
+                <option value="">{{ localContent.texts.noForcePerspective }}</option>
+                <option value="landscape">{{ localContent.texts.landscapeForcePerspective }}</option>
+                <option value="portrait">{{ localContent.texts.portraitForcePerspective }}</option>
+            </select>
+        </div>
+
         <div class="flex justify-end space-x-2 mt-4">
             <button @click="cancelSettings" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 rounded shadow text-white font-semibold transition">
                 ✖ {{ localContent.texts.cancel }}
@@ -61,14 +84,13 @@ export const SettingComponent = {
 `,
     methods: {
         saveSettings() {
-            
-                
+
+
             const updated = {
                 ...this.localContent,
                 texts: new Translations(this.localContent.language).texts
             };
-            if(this.localContent.location != this.contentBlock.properties.location)
-            {
+            if (this.localContent.location != this.contentBlock.properties.location) {
                 updated.lat = null;
                 updated.lon = null;
             }
