@@ -58,10 +58,22 @@ export const SettingComponent = {
             <input type="checkbox" v-model="localContent.showCelcius"/>
         </div>
 
+
+        <div class="flex items-center space-x-2">
+            <label>{{ localContent.texts.showLocation }}:</label>
+            <input type="checkbox" v-model="localContent.showLocation"/>
+        </div>
+
         <div class="flex items-center space-x-2">
             <label>{{ localContent.texts.showTempCharacter }}:</label>
             <input type="checkbox" v-model="localContent.showTempCharacter"/>
         </div>
+
+        <div class="flex items-center space-x-2">
+            <label>{{ localContent.texts.showDecimals }}:</label>
+            <input type="checkbox" v-model="localContent.showDecimals"/>
+        </div>
+
 
         <div>
             <label class="block mb-1">{{ localContent.texts.forcePerspective }}:</label>

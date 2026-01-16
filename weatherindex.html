@@ -118,6 +118,7 @@
                         showCelcius: this.contentBlock.properties.showCelcius,
                         orientation: this.orientation,
                         weatherCard: true,
+                        contentBlock: this.contentBlock,
                     })
                 }
 
@@ -161,7 +162,7 @@
                         <!-- Right: Location - aligned with weather details -->
                         <div class="flex flex-col items-start" style="width: 50%;">
                             <h2 style="font-size: 5vmin;">
-                                {{ contentBlock.properties.locationShortName }}
+                                {{  this.showLocation }}
                             </h2>
                         </div>
                     </div>
@@ -191,7 +192,7 @@
                         <div class="flex flex-col items-start text-left" style="width: 50%; gap: 0.4vmin;">
                             <p class="opacity-80" style="font-size: 3vmin;">
                                 {{ contentBlock.properties.texts.precipitation }}:
-                                {{ todayWeather.precipitation || 0 }}%
+                                {{ todayWeather.precipitation || 0 }}mm
                             </p>
                             <p class="opacity-80" style="font-size: 3vmin;">
                                 {{ contentBlock.properties.texts.humidity }}:
@@ -199,7 +200,7 @@
                             </p>
                             <p class="opacity-80" style="font-size: 3vmin;">
                                 {{ contentBlock.properties.texts.wind }}:
-                                {{ todayWeather.wind }} km/h
+                                {{ todayWeather.wind }} {{contentBlock.properties.texts.meterPerSecond}}
                             </p>
                         </div>
                     </div>
@@ -215,7 +216,7 @@
                                                     <!-- Day Name -->
                             <h2 style="font-size: 8vmin">{{ display.weekDay }} {{ dateFullFormated }}</h2>
                             <p class="opacity-70 mb-4" style="font-size: 5vmin"></p>
-                            <h2 style="font-size: 6vmin">{{ contentBlock.properties.locationShortName }}</h2>
+                            <h2 style="font-size: 6vmin">{{ this.showLocation}}</h2>
                         </div>
 
                         <!-- Temperature and Icon Row -->
@@ -229,13 +230,13 @@
                         <!-- Weather Details (aligned to forecast start) -->
                         <div class="w-full flex flex-col items-start" style="padding-left: 15vmin;line-height: 1.2;">
                             <p class="opacity-80" style="font-size: 5vmin">
-                                {{contentBlock.properties.texts.precipitation}}: {{ todayWeather.precipitation || 0 }}%
+                                {{contentBlock.properties.texts.precipitation}}: {{ todayWeather.precipitation || 0 }}mm
                             </p>
                             <p class="opacity-80" style="font-size: 5vmin">
                                 {{contentBlock.properties.texts.humidity}}: {{ todayWeather.humidity || 0 }}%
                             </p>
                             <p class="opacity-80" style="font-size: 5vmin">
-                                {{contentBlock.properties.texts.wind}}: {{ todayWeather.wind }} km/h
+                                {{contentBlock.properties.texts.wind}}: {{ todayWeather.wind }} {{contentBlock.properties.texts.meterPerSecond}}
                             </p>
                         </div>
 
@@ -307,6 +308,9 @@
                 };
             },
             computed: {
+                showLocation() {
+                    return this.contentBlock.properties.showLocation ? this.contentBlock.properties.locationShortName : ""
+                },
                 language() {
                     try {
                         return this.contentBlock.properties.language;
@@ -326,6 +330,7 @@
                         showCelcius: this.contentBlock.properties.showCelcius,
                         orientation: this.orientation,
                         weatherCard: false,
+                        contentBlock: this.contentBlock,
                     })
                 },
                 dateFullFormated() {
@@ -349,37 +354,75 @@
 
             },
             methods: {
+                toLocalHour(time) {
+                    return new Date(time).getHours();
+                },
                 async fetchWeather() {
                     this.loading = true;
                     this.error = null;
-                    this.weather = null;
-
-                    const lat = this.contentBlock.properties.lat;
-                    const lon = this.contentBlock.properties.lon;
-                    const numberOfDays = this.contentBlock.properties.showDays;
 
                     try {
+                        const { lat, lon, showDays } = this.contentBlock.properties;
                         const res = await api.get("/locationforecast/2.0/compact", { params: { lat, lon } });
                         const timeseries = res.data.properties.timeseries;
 
-                        const daysMap = {};
-                        const result = [];
+                        const days = {};
 
                         for (const ts of timeseries) {
-                            const date = ts.time.split("T")[0];
-                            if (!daysMap[date]) {
-                                daysMap[date] = true;
-                                result.push({
+                            const dateObj = new Date(ts.time);
+                            const date = dateObj.toISOString().split("T")[0];
+                            const hour = this.toLocalHour(ts.time);
+                            const utcHour = dateObj.getUTCHours();
+
+                            if (!days[date]) {
+                                days[date] = {
                                     date,
-                                    temperature: ts.data.instant.details.air_temperature,
-                                    wind: ts.data.instant.details.wind_speed,
-                                    condition: ts.data.next_1_hours?.summary.symbol_code || "clear"
-                                });
-                                if (result.length >= numberOfDays) break;
+                                    temps: [],
+                                    humidities: [],
+                                    precipitation: [],
+                                    winds: [],
+                                    symbol: null,
+                                    symbolHourDiff: Infinity
+                                };
                             }
+
+                            // 07–19 temperature & wind
+                            if (hour >= 7 && hour <= 19) {
+                                days[date].temps.push(ts.data.instant.details.air_temperature);
+                                days[date].winds.push(ts.data.instant.details.wind_speed);
+                                days[date].humidities.push(ts.data.instant.details.relative_humidity);
+                            }
+                            // Accumulate for full day
+                            if ([0, 6, 12, 18].includes(utcHour) && ts.data.next_6_hours?.details?.precipitation_amount != null) {
+                                days[date].precipitation.push(ts.data.next_6_hours.details.precipitation_amount);
+                            }
+
+                            // Pick symbol closest to 12:00
+                            if (ts.data.next_12_hours?.summary?.symbol_code) {
+                                const diff = Math.abs(hour - 12);
+                                if (diff < days[date].symbolHourDiff) {
+                                    days[date].symbol = ts.data.next_12_hours.summary.symbol_code;
+                                    days[date].symbolHourDiff = diff;
+                                }
+                            }
+
                         }
 
-                        this.weather = result;
+                        this.weather = Object.values(days)
+                            .slice(0, showDays)
+                            .map(d => ({
+                                date: d.date,
+                                temperature: Math.max(...d.temps),
+                                humidity: Math.round(
+                                    d.humidities.reduce((a, b) => a + b, 0) / d.humidities.length
+                                ),
+                                precipitation: Number(
+                                    d.precipitation.reduce((sum, value) => sum + value, 0).toFixed(1)
+                                ),
+                                wind: Math.max(...d.winds),
+                                condition: d.symbol
+                            }));
+
                     } catch (e) {
                         this.error = "Failed to load weather data";
                     } finally {
@@ -476,7 +519,10 @@
                         lon: 10.7579,
                         showDays: 6,
                         showCelcius: true,
-                        texts: new Translations("en-EN").texts
+                        texts: new Translations("en-EN").texts,
+                        showTempCharacter: false,
+                        showLocation: true,
+                        showDecimals: false,
                     }
                 }
                 document.getElementById('app').style.backgroundColor = this.contentBlock.properties.appBackgroundColor;

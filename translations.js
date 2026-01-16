@@ -12,11 +12,13 @@ export class Translations {
                 language: "Language",
                 days: "Days to show",
                 celsius: "Show celsius",
+                showLocation: "Show location",
+                showTempCharacter: "Show temperature character",
+                showDecimals: "Show decimals",
                 forcePerspective: "Force perspective",
                 noForcePerspective: "None",
                 portraitForcePerspective: "Portrait",
                 landscapeForcePerspective: "Landscape",
-                showTempCharacter: "Show temperature character",
                 save: "Save",
                 cancel: "Cancel",
                 english: "English",
@@ -25,6 +27,8 @@ export class Translations {
                 precipitation: "Precipitation",
                 humidity: "Humidity",
                 wind: "Wind",
+                meterPerSecond: "m/s",
+                
 
 
             },
@@ -37,11 +41,13 @@ export class Translations {
                 language: "Språk",
                 days: "Vis dager",
                 celsius: "Vis celsius",
+                showLocation: "Vis sted",
+                showTempCharacter: "Vis temperatur bokstav",
+                showDecimals: "Vis desimaler",
                 forcePerspective: "Tving perspektiv",
                 noForcePerspective: "Ingen",
                 portraitForcePerspective: "Stående",
                 landscapeForcePerspective: "Liggende",
-                showTempCharacter: "Vis temperatur bokstav",
                 save: "Lagre",
                 cancel: "Avbryt",
                 english: "Engelsk",
@@ -50,6 +56,7 @@ export class Translations {
                 precipitation: "Nedbør",
                 humidity: "Luftfuktighet",
                 wind: "Vind",
+                meterPerSecond: "m/s",
             },
             // Add more languages here
         };
