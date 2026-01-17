@@ -357,6 +357,13 @@
                 toLocalHour(time) {
                     return new Date(time).getHours();
                 },
+                toLocalDate(time) {
+                    const d = new Date(time);
+                    const y = d.getFullYear();
+                    const m = String(d.getMonth() + 1).padStart(2, "0");
+                    const day = String(d.getDate()).padStart(2, "0");
+                    return `${y}-${m}-${day}`; // YYYY-MM-DD (local!)
+                },
                 async fetchWeather() {
                     this.loading = true;
                     this.error = null;
@@ -367,12 +374,23 @@
                         const timeseries = res.data.properties.timeseries;
 
                         const days = {};
-
+                        let firstDate = null;
+                        let firstTs = true;
                         for (const ts of timeseries) {
                             const dateObj = new Date(ts.time);
-                            const date = dateObj.toISOString().split("T")[0];
+                            const date = this.toLocalDate(ts.time);
                             const hour = this.toLocalHour(ts.time);
                             const utcHour = dateObj.getUTCHours();
+                            const nowHour = new Date().getHours();
+
+                            if (!firstDate) {
+                                firstDate = date; // set once
+                            }
+
+                            const isFirstDay = date === firstDate;
+                            if (isFirstDay && nowHour > hour)
+                                continue;
+
 
                             if (!days[date]) {
                                 days[date] = {
@@ -386,19 +404,27 @@
                                 };
                             }
 
+
                             // 07–19 temperature & wind
-                            if (hour >= 7 && hour <= 19) {
+                            if (
+                                (isFirstDay && firstTs) ||        // today: only using first TS
+                                (!isFirstDay && hour >= 7 && hour <= 19) // future days: full daytime
+                            ) {
                                 days[date].temps.push(ts.data.instant.details.air_temperature);
                                 days[date].winds.push(ts.data.instant.details.wind_speed);
                                 days[date].humidities.push(ts.data.instant.details.relative_humidity);
                             }
                             // Accumulate for full day
-                            if ([0, 6, 12, 18].includes(utcHour) && ts.data.next_6_hours?.details?.precipitation_amount != null) {
+                            //TODO: Fix localtime correction for day 2,3 and on.
+                            if (!isFirstDay && [0, 6, 12, 18].includes(utcHour) && ts.data.next_6_hours?.details?.precipitation_amount != null) {
                                 days[date].precipitation.push(ts.data.next_6_hours.details.precipitation_amount);
+                            }
+                            if (isFirstDay) {
+                                days[date].precipitation.push(ts.data.next_1_hours.details.precipitation_amount)
                             }
 
                             // Pick symbol closest to 12:00
-                            if (ts.data.next_12_hours?.summary?.symbol_code) {
+                            if (!isFirstDay && ts.data.next_12_hours?.summary?.symbol_code) {
                                 const diff = Math.abs(hour - 12);
                                 if (diff < days[date].symbolHourDiff) {
                                     days[date].symbol = ts.data.next_12_hours.summary.symbol_code;
@@ -406,6 +432,11 @@
                                 }
                             }
 
+                            if (isFirstDay && firstTs) {
+                                days[date].symbol = ts.data.next_1_hours.summary.symbol_code;
+                            }
+
+                            firstTs = false;
                         }
 
                         this.weather = Object.values(days)
@@ -503,7 +534,27 @@
                 },
                 capitalizeFirst(str) {
                     return str.charAt(0).toUpperCase() + str.slice(1).replace('.', '')
-                }
+                },
+                scheduleNextFetch() {
+                    // Clear existing timer (safety)
+                    if (this.fetchTimer) {
+                        clearTimeout(this.fetchTimer);
+                    }
+
+                    const now = new Date();
+
+                    // Next full hour (local time)
+                    const nextHour = new Date(now);
+                    nextHour.setMinutes(0, 0, 0);
+                    nextHour.setHours(nextHour.getHours() + 1);
+                    nextHour.setSeconds(5);
+                    const delay = nextHour - now;
+
+                    this.fetchTimer = setTimeout(async () => {
+                        await this.fetchWeather();
+                        this.scheduleNextFetch(); // schedule again
+                    }, delay);
+                },
             },
             mounted() {
 
@@ -522,7 +573,7 @@
                         texts: new Translations("en-EN").texts,
                         showTempCharacter: false,
                         showLocation: true,
-                        showDecimals: false,
+                        showDecimals: true,
                     }
                 }
                 document.getElementById('app').style.backgroundColor = this.contentBlock.properties.appBackgroundColor;
@@ -530,10 +581,28 @@
                 this.checkOrientation();
                 window.addEventListener('resize', this.checkOrientation);
                 this.fetchWeather();
+                this.scheduleNextFetch();
+                this.onVisibilityChange = () => {
+                    if (!document.hidden) {
+                        this.fetchWeather();
+                        this.scheduleNextFetch();
+                    }
+                };
+
+                document.addEventListener("visibilitychange", this.onVisibilityChange);
             },
             beforeUnmount() {
                 window.removeEventListener('resize', this.checkOrientation)
                 window.removeEventListener('message', this.iframeMessageHandler)
+                if (this.fetchTimer) {
+                    clearTimeout(this.fetchTimer);
+                }
+                if (this.onVisibilityChange) {
+                    document.removeEventListener(
+                        "visibilitychange",
+                        this.onVisibilityChange
+                    );
+                }
             }
         };
 
