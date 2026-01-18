@@ -53,6 +53,11 @@ export const SettingComponent = {
             <input type="number" v-model.number="localContent.showDays" min="1" max="7" class="w-full p-2 rounded bg-gray-800 text-white"/>
         </div>
 
+        <div>
+            <label class="block mb-1">{{ localContent.texts.portraitShowDays }}:</label>
+            <input type="number" v-model.number="localContent.portraitShowDays" min="1" max="7" class="w-full p-2 rounded bg-gray-800 text-white"/>
+        </div>
+
         <div class="flex items-center space-x-2">
             <label>{{ localContent.texts.fahrenheit }}:</label>
             <input type="checkbox" v-model="localContent.showFahrenheit"/>

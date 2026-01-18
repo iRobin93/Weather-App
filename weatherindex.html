@@ -86,30 +86,52 @@
                     <p class="font-bold" style="font-size: 3vmin; line-height: 1">{{ display.temperature }}</p>
                 </div>
 
-                <div v-if="orientation == 'portrait'"
-                    class="rounded-2xl p-4 shadow-2xl transform hover:scale-105 transition-transform duration-300 flex items-center justify-between flex-shrink-0 mb-0"
-                    :style="{ 
-                        backgroundColor: contentBlock.properties.cardBackgroundColor, 
-                        color: contentBlock.properties.textColor, 
-                        width: '75%',
-                        height: '13vmin'
-                    }">
-                    
-                    <!-- Left: Day -->
-                    <h2 class="font-semibold p-10" style="font-size: 4vmin; width: 30%">{{ display.weekDay }}</h2>
-                    
-                    <!-- Center: Icon -->
-                    <img
+                                <div
+                      v-if="orientation === 'portrait'"
+                      class="rounded-2xl shadow-2xl flex items-center flex-shrink-0"
+                      :style="{
+                        backgroundColor: contentBlock.properties.cardBackgroundColor,
+                        color: contentBlock.properties.textColor,
+                        width: 'clamp(16rem, 35vh, 22rem)',
+                        height: 'clamp(3.5rem, 8vh, 5rem)',
+                        gap: 'clamp(0.5rem, 1.2vh, 1rem)'
+                      }"
+                    >
+                      <!-- Day -->
+                      <h2
+                        class="font-semibold"
+                        style="
+                          font-size: clamp(0.9rem, 2.4vh, 1.3rem);
+                          width: clamp(6rem, 15vh, 9rem);
+                          padding-left: clamp(0.75rem, 3vh, 1.5rem);
+                        "
+                      >
+                        {{ display.weekDay }}
+                      </h2>
+
+                      <!-- Icon -->
+                      <img
                         :src="display.icon"
                         :alt="day.symbolCode"
-                        style="width: 10vmin; height: 10vmin;"
-                    />
+                        style="
+                          height: 80%;
+                          aspect-ratio: 1 / 1;
+                        "
+                      />
 
-                    <!-- Right: Temperature -->
-                    <div class="text-right" style="width: 30%">
-                        <p class="font-bold p-10" style="font-size: 5vmin">{{ display.temperature }}</p>
+                      <!-- Temperature -->
+                      <div
+                        class="text-right"
+                        style="width: clamp(2.5rem, 6vh, 4rem);"
+                      >
+                        <p
+                          class="font-bold"
+                          style="font-size: clamp(0.8rem, 2vh, 1.2rem);"
+                        >
+                          {{ display.temperature }}
+                        </p>
+                      </div>
                     </div>
-                </div>
             `,
             computed: {
                 display() {
@@ -220,57 +242,105 @@
 
 
                     <!-- Portrait layout for today weather -->
-                    <div v-if="todayWeather && orientation === 'portrait'"
-                        class="flex flex-col flex-[0.6] justify-between p-2 rounded-xl w-full">
-                        
-                        <!-- Location and Date -->
-                        <div class="text-center mb-2">
-                                                    <!-- Day Name -->
-                            <h2 style="font-size: 8vmin">{{ display.weekDay }} {{ dateFullFormated }}</h2>
-                            <p class="opacity-70 mb-4" style="font-size: 5vmin"></p>
-                            <h2 style="font-size: 6vmin">{{ this.showLocation}}</h2>
-                        </div>
+                    <div class="flex flex-col w-full items-center" style="gap: clamp(2vmin, 4vh, 5vmin);">
 
-                        <!-- Temperature and Icon Row -->
-                        <div class="flex items-start" style="gap:6vmin">
-                            <p class="font-bold" style="font-size: 23vmin;  padding-left:12vmin;">{{ display.temperature }}</p>
-                            <img :src="display.icon" :alt="todayWeather.symbolCode" style="width: 20vmin; margin-top:8vmin; height: 20vmin;" />
-                        </div>
+                      <div
+                        v-if="orientation === 'portrait'"
+                        class="min-h-screen flex items-center justify-center"
+                        style="max-height: 100vh;">
+                        <!-- Shared container -->
+                        <div class="flex flex-col items-start max-w-xs w-[90vw] box-border">
 
+                          <!-- Location and Date -->
+                          <div class="text-center mb-2">
+                            <h2
+                              style="
+                                font-size: clamp(1.8rem, 4vh, 3.2rem);
+                                white-space: nowrap;
+                              "
+                            >
+                              {{ display.weekDay }} {{ dateFullFormated }}
+                            </h2>
 
-  
-                        <!-- Weather Details (aligned to forecast start) -->
-                        <div class="w-full flex flex-col items-start" style="padding-left: 15vmin;line-height: 1.2;">
-                            <p class="opacity-80" style="font-size: 5vmin">
-                                {{contentBlock.properties.texts.precipitation}}: {{ todayWeather.precipitation || 0 }} mm
+                            <h2
+                              style="
+                                font-size: clamp(1.8rem, 4vh, 3.2rem);
+                                margin-top: clamp(0.5rem, 1vh, 1rem);
+                              "
+                            >
+                              {{ showLocation }}
+                            </h2>
+                          </div>
+
+                          <!-- Temperature and Icon Row -->
+                          <div
+                            class="flex items-start"
+                            style="gap: clamp(0.75rem, 2vh, 1.5rem);"
+                          >
+                            <p
+                              class="font-bold"
+                              style="font-size: clamp(4rem, 10vh, 7rem);"
+                            >
+                              {{ display.temperature }}
                             </p>
-                            <p class="opacity-80" style="font-size: 5vmin">
-                                {{contentBlock.properties.texts.humidity}}: {{ todayWeather.humidity || 0 }}%
-                            </p>
-                            <p class="opacity-80" style="font-size: 5vmin">
-                                {{contentBlock.properties.texts.wind}}: {{ todayWeather.wind }} {{contentBlock.properties.texts.meterPerSecond}}
-                            </p>
-                        </div>
 
-                                            <!-- Forecast Cards Container -->
-                    <div v-if="weather"
-                        class="flex flex-1 items-center justify-center p-4">
-                        
-                        <div class="flex gap-4"
-                            :class="orientation === 'portrait' ? 'flex-col items-center w-full' : 'flex-row justify-center w-full'">
-                            <WeatherCard
-                                v-for="day in (weather || []).slice(1, orientation === 'landscape' ?  contentBlock.properties.showDays : contentBlock.properties.portraitShowDays ?? contentBlock.properties.showDays)"
-                                :key="day.date"
-                                :day="day"
-                                :contentBlock="contentBlock"
-                                :orientation="orientation"
+                            <img
+                              :src="display.icon"
+                              :alt="todayWeather.symbolCode"
+                              style="
+                                width: clamp(4rem, 10vh, 7rem);
+                                margin-top: clamp(1rem, 2.5vh, 2rem);
+                                height: auto;
+                              "
                             />
+                          </div>
+
+                          <!-- Weather Details -->
+                          <div
+                            class="w-full flex flex-col"
+                            style="
+                              line-height: 1.2;
+                              margin-top: clamp(1rem, 2.5vh, 2rem);
+                            "
+                          >
+                            <p style="font-size: clamp(0.9rem, 2.5vh, 1.3rem);" class="opacity-80">
+                              {{ contentBlock.properties.texts.precipitation }}:
+                              {{ todayWeather.precipitation || 0 }} mm
+                            </p>
+
+                            <p style="font-size: clamp(0.9rem, 2.5vh, 1.3rem);" class="opacity-80">
+                              {{ contentBlock.properties.texts.humidity }}:
+                              {{ todayWeather.humidity || 0 }}%
+                            </p>
+
+                            <p style="font-size: clamp(0.9rem, 2.5vh, 1.3rem);" class="opacity-80">
+                              {{ contentBlock.properties.texts.wind }}:
+                              {{ todayWeather.wind }}
+                              {{ contentBlock.properties.texts.meterPerSecond }}
+                            </p>
+                          </div>
+
+                          <!-- Portrait Forecast -->
+                          <div
+                            v-if="weather && orientation === 'portrait'"
+                            class="flex flex-col items-start"
+                            style="
+                              max-height: clamp(18rem, 60vh, 30rem);
+                              gap: clamp(0.5rem, 1.2vh, 1rem);
+                              margin-top: clamp(1.5rem, 5vh, 3rem);
+                            "
+                          >
+                            <WeatherCard
+                              v-for="day in (weather || []).slice(1, contentBlock.properties.portraitShowDays ?? contentBlock.properties.showDays)"
+                              :key="day.date"
+                              :day="day"
+                              :contentBlock="contentBlock"
+                              orientation="portrait"
+                            />
+                          </div>
+
                         </div>
-                    </div>
-
-
-                    </div>
-
+                      </div>
 
 
                     <!-- Loading / Error -->
