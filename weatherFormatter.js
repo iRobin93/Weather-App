@@ -1,19 +1,20 @@
 export function formatWeather(day, options) {
   if (!day) return {}
 
-  const { locale, showCelcius, orientation, weatherCard, contentBlock } = options
+  const { locale, showFahrenheit, orientation, weatherCard, contentBlock } = options
   const date = new Date(day.date)
 
   return {
-    temperature: showCelcius
-      ? `${contentBlock.properties.showDecimals
-        ? day.temperature.toFixed(1)
-        : Math.round(day.temperature)
-      }°${contentBlock.properties.showTempCharacter ? "C" : ""}`
-      : `${contentBlock.properties.showDecimals
+    temperature: showFahrenheit
+      ?
+      `${contentBlock.properties.showDecimals
         ? (day.temperature * 9 / 5 + 32).toFixed(1)
         : Math.round(day.temperature * 9 / 5 + 32)
-      }°${contentBlock.properties.showTempCharacter ? "F" : ""}`,
+      }°${contentBlock.properties.showTempCharacter ? "F" : ""}` :
+      `${contentBlock.properties.showDecimals
+        ? day.temperature.toFixed(1)
+        : Math.round(day.temperature)
+      }°${contentBlock.properties.showTempCharacter ? "C" : ""}`,
 
 
     weekDay:

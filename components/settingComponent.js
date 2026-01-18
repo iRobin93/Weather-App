@@ -54,8 +54,8 @@ export const SettingComponent = {
         </div>
 
         <div class="flex items-center space-x-2">
-            <label>{{ localContent.texts.celsius }}:</label>
-            <input type="checkbox" v-model="localContent.showCelcius"/>
+            <label>{{ localContent.texts.fahrenheit }}:</label>
+            <input type="checkbox" v-model="localContent.showFahrenheit"/>
         </div>
 
 
