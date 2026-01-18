@@ -21,6 +21,8 @@ html, body {
     grid-template-rows: 1fr 1fr;
     width: 100%;
     height: 100%;
+    gap: 8px;              /* thickness of separator */
+    background: #444;      /* separator color */
 }
 
 /* Each quadrant */
@@ -70,25 +72,94 @@ showApp.src = './weatherindex.html';
 const showApp2 = document.getElementById('appframe2');
 showApp2.src = './clockindex.html';
 
+const showApp3 = document.getElementById('appframe3');
+showApp3.src = './weatherindex.html';
+
+const showApp4 = document.getElementById('appframe4');
+showApp4.src = './weatherindex.html';
+
+
 showApp.onload = () => {
   showApp.contentWindow.postMessage(
     JSON.stringify({
       properties: {
-        appBackgroundColor: "#2b1055",
-        cardBackgroundColor: "#3b1c6e",
+        appBackgroundColor: "#7952b7",
+        cardBackgroundColor: "#987DC5",
         textColor: "#ffffff",
         language: "nb-NO",
         location: "Oslo, Norway",
         locationShortName: "Oslo",
         lat: 59.9114,
         lon: 10.7579,
-        showDays: 4,
-        showCelcius: true,
+        showDays: 6,
+        portraitShowDays: 4,
+        showFahrenheit: false,
+        showLocation: true,
       }
     }),
     "*"
   );
 };
+
+    showApp2.onload = () => {
+        showApp2.contentWindow.postMessage(
+            JSON.stringify({
+                properties: {
+                    backgroundColor: "#7952b7",
+                    textColor: "rgba(255, 255, 255, 1)",
+                    watchBackgroundColor: "rgba(250,250,255, 1)",
+                    watchHandsColor: "rgba(0,0,0, 1)",
+                    type: "analog",
+                    slideDuration: 10 * 1000,
+                    language: 'nb-NO',
+                    // example timezone: 'Europe/Oslo', 'America/New_York', etc.
+                    timezone: 'Europe/Oslo',
+                    showSeconds: true, // wip
+                    showFullDate: false,
+                }
+            }),
+            "*"
+        );
+    };
+
+    showApp3.onload = () => {
+        showApp3.contentWindow.postMessage(
+            JSON.stringify({
+                properties: {
+                    appBackgroundColor: "#7952b7",
+                    cardBackgroundColor: "rgb(137, 93, 207)",
+                    textColor: "#ffffff",
+                    language: "nb-NO",
+                    location: "Tromsø",
+                    showDays: 6,
+                    portraitShowDays: 4,             
+                    showFahrenheit: false,
+                    showLocation: true,
+                }
+            }),
+            "*"
+        );
+    };
+
+        showApp4.onload = () => {
+            showApp4.contentWindow.postMessage(
+                JSON.stringify({
+                    properties: {
+                        appBackgroundColor: "#7952b7",
+                        cardBackgroundColor: "#987DC5",
+                        textColor: "#ffffff",
+                        language: "nb-NO",
+                        location: "Kristiansand",
+                        showDays: 6,
+                        portraitShowDays: 4,
+                        showFahrenheit: false,
+                        showLocation: true,
+                    }
+                }),
+                "*"
+            );
+        };
+
 </script>
 
 </body>
