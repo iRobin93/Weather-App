@@ -1,12 +1,14 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" class="w-full h-full">
-
-<head>
+  <head>
     <meta charset="UTF-8" />
     <title>Vue 3 Weather App</title>
 
     <!-- Tailwind CSS v2 minified -->
-    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+    <link
+      href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
 
     <!-- Vue 3 production -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
@@ -15,52 +17,52 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
     <style>
-        html,
-        body,
-        #app {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            font-family: Arial;
-        }
+      html,
+      body,
+      #app {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        font-family: Arial;
+      }
     </style>
+  </head>
 
-</head>
-
-<body class="w-full h-full">
-
+  <body class="w-full h-full">
     <div id="app"></div>
 
     <script type="module">
+      // -------------------------------
+      // Translations class
+      // -------------------------------
+      import { Translations } from "./translations.js";
+      // -------------------------------
+      // Axios instance
+      // -------------------------------
 
+      // const api = axios.create({ baseURL: "https://api.met.no/weatherapi/locationforecast/2.0/compact" });
+      const api = axios.create({
+        baseURL: "https://spring-poetry-f967.robinsjothun.workers.dev",
+      });
 
-        // -------------------------------
-        // Translations class
-        // -------------------------------
-        import { Translations } from "./translations.js"
-        // -------------------------------
-        // Axios instance
-        // -------------------------------
-        const api = axios.create({ baseURL: "https://api.met.no/weatherapi" });
+      // -------------------------------
+      // Settings Component
+      // -------------------------------
+      import { SettingComponent } from "./components/settingComponent.js";
 
-        // -------------------------------
-        // Settings Component
-        // -------------------------------
-        import { SettingComponent } from "./components/settingComponent.js"
+      // -------------------------------
+      // Weather Formatter
+      // -------------------------------
+      import { formatWeather } from "./weatherFormatter.js";
 
-        // -------------------------------
-        // Weather Formatter
-        // -------------------------------
-        import { formatWeather } from './weatherFormatter.js'
-
-        // -------------------------------
-        // WeatherCard Component
-        // -------------------------------
-        const WeatherCard = {
-            props: { contentBlock: Object, day: Object, orientation: String },
-            template: /*HTML*/ `
+      // -------------------------------
+      // WeatherCard Component
+      // -------------------------------
+      const WeatherCard = {
+        props: { contentBlock: Object, day: Object, orientation: String },
+        template: /*HTML*/ `
                 <div v-if="orientation == 'landscape'"
                     class="rounded-2xl shadow-2xl text-center
                             flex flex-col items-center
@@ -132,31 +134,30 @@
                       </div>
                     </div>
             `,
-            computed: {
-                display() {
-                    return formatWeather(this.day, {
-                        locale: this.contentBlock.properties.language.split('-')[0],
-                        showFahrenheit: this.contentBlock.properties.showFahrenheit,
-                        orientation: this.orientation,
-                        weatherCard: true,
-                        contentBlock: this.contentBlock,
-                    })
-                }
+        computed: {
+          display() {
+            return formatWeather(this.day, {
+              locale: this.contentBlock.properties.language.split("-")[0],
+              showFahrenheit: this.contentBlock.properties.showFahrenheit,
+              orientation: this.orientation,
+              weatherCard: true,
+              contentBlock: this.contentBlock,
+            });
+          },
+        },
+        methods: {
+          capitalizeFirst(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1).replace(".", "");
+          },
+        },
+      };
 
-            },
-            methods: {
-                capitalizeFirst(str) {
-                    return str.charAt(0).toUpperCase() + str.slice(1).replace('.', '');
-                }
-            }
-        };
-
-        // -------------------------------
-        // Root App
-        // -------------------------------
-        const App = {
-            components: { SettingComponent, WeatherCard },
-            template: /*HTML*/ `
+      // -------------------------------
+      // Root App
+      // -------------------------------
+      const App = {
+        components: { SettingComponent, WeatherCard },
+        template: /*HTML*/ `
                     <div class="w-full h-full relative"
                         :style="{ 
                             backgroundColor: contentBlock.properties.appBackgroundColor, 
@@ -380,318 +381,357 @@
 
                 </div>
             `,
-            data() {
-                return {
-                    loading: false,
-                    error: null,
-                    weather: null,
-                    showSettings: false,
-                    contentBlock: { properties: {} },
-                    orientation: null
-                };
-            },
-            computed: {
-                showLocation() {
-                    return this.contentBlock.properties.showLocation ? this.contentBlock.properties.locationShortName : ""
-                },
-                language() {
-                    try {
-                        return this.contentBlock.properties.language;
-                    }
-                    catch (error) {
-                        console.log('no language property in content block');
-                    }
-
-                    return 'en-US'; // default
-                },
-                todayWeather() {
-                    return this.weather && this.weather.length ? this.weather[0] : null
-                },
-                display() {
-                    return formatWeather(this.todayWeather, {
-                        locale: this.contentBlock.properties.language.split('-')[0],
-                        showFahrenheit: this.contentBlock.properties.showFahrenheit,
-                        orientation: this.orientation,
-                        weatherCard: false,
-                        contentBlock: this.contentBlock,
-                    })
-                },
-                dateFullFormated() {
-                    const today = this.now;
-                    const locale = `${this.language}`;
-                    // const locale = `${this.contentBlock.properties.languageCode}-${this.contentBlock.properties.countryCode}`;
-
-                    const options = {
-                        // dateStyle: 'full',
-                        month: 'long',
-                        day: 'numeric',
-                    };
-
-                    if (this.timezone) {
-                        options.timeZone = this.timezone;
-                    }
-
-                    const formatter = new Intl.DateTimeFormat(locale, options);
-                    return formatter.format(today);
-                },
-
-            },
-            methods: {
-                toLocalHour(time) {
-                    return new Date(time).getHours();
-                },
-                toLocalDate(time) {
-                    const d = new Date(time);
-                    const y = d.getFullYear();
-                    const m = String(d.getMonth() + 1).padStart(2, "0");
-                    const day = String(d.getDate()).padStart(2, "0");
-                    return `${y}-${m}-${day}`; // YYYY-MM-DD (local!)
-                },
-                async fetchWeather() {
-                    this.loading = true;
-                    this.error = null;
-
-                    try {
-                        const { lat, lon, showDays } = this.contentBlock.properties;
-                        const res = await api.get("/locationforecast/2.0/compact", { params: { lat, lon } });
-                        const timeseries = res.data.properties.timeseries;
-
-                        const days = {};
-                        let firstDate = null;
-                        let firstTs = true;
-                        for (const ts of timeseries) {
-                            const dateObj = new Date(ts.time);
-                            const date = this.toLocalDate(ts.time);
-                            const hour = this.toLocalHour(ts.time);
-                            const utcHour = dateObj.getUTCHours();
-                            const nowHour = new Date().getHours();
-
-                            if (!firstDate) {
-                                firstDate = date; // set once
-                            }
-
-                            const isFirstDay = date === firstDate;
-                            if (isFirstDay && nowHour > hour)
-                                continue;
-
-
-                            if (!days[date]) {
-                                days[date] = {
-                                    date,
-                                    temps: [],
-                                    humidities: [],
-                                    precipitation: [],
-                                    winds: [],
-                                    symbol: null,
-                                    symbolHourDiff: Infinity
-                                };
-                            }
-
-
-                            // 07–19 temperature & wind
-                            if (
-                                (isFirstDay && firstTs) ||        // today: only using first TS
-                                (!isFirstDay && hour >= 7 && hour <= 19) // future days: full daytime
-                            ) {
-                                days[date].temps.push(ts.data.instant.details.air_temperature);
-                                days[date].winds.push(ts.data.instant.details.wind_speed);
-                                days[date].humidities.push(ts.data.instant.details.relative_humidity);
-                            }
-                            // Accumulate for full day
-                            //TODO: Fix localtime correction for day 2,3 and on.
-                            if (!isFirstDay && [0, 6, 12, 18].includes(utcHour) && ts.data.next_6_hours?.details?.precipitation_amount != null) {
-                                days[date].precipitation.push(ts.data.next_6_hours.details.precipitation_amount);
-                            }
-                            if (isFirstDay) {
-                                days[date].precipitation.push(ts.data.next_1_hours.details.precipitation_amount)
-                            }
-
-                            // Pick symbol closest to 12:00
-                            if (!isFirstDay && ts.data.next_12_hours?.summary?.symbol_code) {
-                                const diff = Math.abs(hour - 12);
-                                if (diff < days[date].symbolHourDiff) {
-                                    days[date].symbol = ts.data.next_12_hours.summary.symbol_code;
-                                    days[date].symbolHourDiff = diff;
-                                }
-                            }
-
-                            if (isFirstDay && firstTs) {
-                                days[date].symbol = ts.data.next_1_hours.summary.symbol_code;
-                            }
-
-                            firstTs = false;
-                        }
-                        const maxDays = Math.max(this.contentBlock.properties.showDays, this.contentBlock.properties.portraitShowDays || 0);
-                        this.weather = Object.values(days)
-                            .slice(0, maxDays)
-                            .map(d => ({
-                                date: d.date,
-                                temperature: Math.max(...d.temps),
-                                humidity: Math.round(
-                                    d.humidities.reduce((a, b) => a + b, 0) / d.humidities.length
-                                ),
-                                precipitation: Number(
-                                    d.precipitation.reduce((sum, value) => sum + value, 0).toFixed(1)
-                                ),
-                                wind: Math.max(...d.winds),
-                                condition: d.symbol
-                            }));
-
-                    } catch (e) {
-                        this.error = "Failed to load weather data";
-                    } finally {
-                        this.loading = false;
-                    }
-                },
-                async resolveLocation(query) {
-                    if (!query) return false;
-                    try {
-                        const res = await axios.get("https://nominatim.openstreetmap.org/search", {
-                            params: {
-                                q: query,
-                                format: "json",
-                                limit: 1
-                            },
-                            headers: {
-                                "Accept-Language": this.contentBlock.properties.language.split('-')[0],
-                                'User-Agent': 'MyWeatherApp/1.0 (robin_ms_3@hotmail.com)' // Required by Nominatim
-                            }
-                        });
-                        if (res.data.length) {
-                            const place = res.data[0];
-
-                            this.contentBlock.properties.lat = parseFloat(place.lat);
-                            this.contentBlock.properties.lon = parseFloat(place.lon);
-                            this.contentBlock.properties.location = place.display_name;
-                            this.contentBlock.properties.locationShortName = place.display_name.split(',')[0];
-
-                            return true;
-                        }
-                    } catch (err) {
-                        console.error("Nominatim error:", err);
-                    }
-                    return false;
-                },
-                onSettingsSave() {
-                    this.handleNewSettings();
-                    this.showSettings = false;
-                },
-                async iframeMessageHandler(e) {
-                    if (e && e.data) {
-                        if (e.data == '{}') {
-                            this.contentBlock = {};
-                        }
-                        else {
-                            console.log('e', e);
-
-                            const contentBlock = JSON.parse(e.data);
-                            this.contentBlock = contentBlock;
-                            this.handleNewSettings();
-                        }
-                    }
-                },
-                async handleNewSettings() {
-                    document.getElementById('app').style.backgroundColor = this.contentBlock.properties.appBackgroundColor;
-                    this.contentBlock.properties.texts = new Translations(this.contentBlock.properties.language).texts
-                    if (!this.contentBlock.properties.lat || !this.contentBlock.properties.lon) {
-                        const resolved = await this.resolveLocation(this.contentBlock.properties.location);
-                        if (!resolved) {
-                            this.error = this.contentBlock.properties.texts.PlaceNotFoundError;
-                        }
-                    }
-
-                    this.checkOrientation();
-                    this.fetchWeather();
-                },
-                checkOrientation() {
-                    if (window.innerHeight > window.innerWidth) {
-
-                        this.orientation = 'portrait';
-                    }
-                    else {
-                        this.orientation = 'landscape';
-                    }
-                    if (this.contentBlock.properties.perspective == "" || this.contentBlock.properties.perspective == null)
-                        return
-                    this.orientation = this.contentBlock.properties.perspective
-                },
-                capitalizeFirst(str) {
-                    return str.charAt(0).toUpperCase() + str.slice(1).replace('.', '')
-                },
-                scheduleNextFetch() {
-                    // Clear existing timer (safety)
-                    if (this.fetchTimer) {
-                        clearTimeout(this.fetchTimer);
-                    }
-
-                    const now = new Date();
-
-                    // Next full hour (local time)
-                    const nextHour = new Date(now);
-                    nextHour.setMinutes(0, 0, 0);
-                    nextHour.setHours(nextHour.getHours() + 1);
-                    nextHour.setSeconds(5);
-                    const delay = nextHour - now;
-
-                    this.fetchTimer = setTimeout(async () => {
-                        await this.fetchWeather();
-                        this.scheduleNextFetch(); // schedule again
-                    }, delay);
-                },
-            },
-            mounted() {
-
-                this.contentBlock = {
-                    properties: {
-                        appBackgroundColor: "#7952b7",
-                        cardBackgroundColor: "#987DC5",
-                        textColor: "#ffffff",
-                        language: "en-EN",
-                        location: "Oslo, Norway",
-                        locationShortName: "Oslo",
-                        lat: 59.9114,
-                        lon: 10.7579,
-                        showDays: 6,
-                        portraitShowDays: 4,
-                        showFahrenheit: false,
-                        texts: new Translations("en-EN").texts,
-                        showTempCharacter: false,
-                        showLocation: true,
-                        showDecimals: true,
-                    }
-                }
-                document.getElementById('app').style.backgroundColor = this.contentBlock.properties.appBackgroundColor;
-                window.addEventListener('message', this.iframeMessageHandler);
-                this.checkOrientation();
-                window.addEventListener('resize', this.checkOrientation);
-                this.fetchWeather();
-                this.scheduleNextFetch();
-                this.onVisibilityChange = () => {
-                    if (!document.hidden) {
-                        this.fetchWeather();
-                        this.scheduleNextFetch();
-                    }
-                };
-
-                document.addEventListener("visibilitychange", this.onVisibilityChange);
-            },
-            beforeUnmount() {
-                window.removeEventListener('resize', this.checkOrientation)
-                window.removeEventListener('message', this.iframeMessageHandler)
-                if (this.fetchTimer) {
-                    clearTimeout(this.fetchTimer);
-                }
-                if (this.onVisibilityChange) {
-                    document.removeEventListener(
-                        "visibilitychange",
-                        this.onVisibilityChange
-                    );
-                }
+        data() {
+          return {
+            loading: false,
+            error: null,
+            weather: null,
+            showSettings: false,
+            contentBlock: { properties: {} },
+            orientation: null,
+          };
+        },
+        computed: {
+          showLocation() {
+            return this.contentBlock.properties.showLocation
+              ? this.contentBlock.properties.locationShortName
+              : "";
+          },
+          language() {
+            try {
+              return this.contentBlock.properties.language;
+            } catch (error) {
+              console.log("no language property in content block");
             }
-        };
 
-        Vue.createApp(App).mount("#app");
+            return "en-US"; // default
+          },
+          todayWeather() {
+            return this.weather && this.weather.length ? this.weather[0] : null;
+          },
+          display() {
+            return formatWeather(this.todayWeather, {
+              locale: this.contentBlock.properties.language.split("-")[0],
+              showFahrenheit: this.contentBlock.properties.showFahrenheit,
+              orientation: this.orientation,
+              weatherCard: false,
+              contentBlock: this.contentBlock,
+            });
+          },
+          dateFullFormated() {
+            const today = this.now;
+            const locale = `${this.language}`;
+            // const locale = `${this.contentBlock.properties.languageCode}-${this.contentBlock.properties.countryCode}`;
+
+            const options = {
+              // dateStyle: 'full',
+              month: "long",
+              day: "numeric",
+            };
+
+            if (this.timezone) {
+              options.timeZone = this.timezone;
+            }
+
+            const formatter = new Intl.DateTimeFormat(locale, options);
+            return formatter.format(today);
+          },
+        },
+        methods: {
+          toLocalHour(time) {
+            return new Date(time).getHours();
+          },
+          toLocalDate(time) {
+            const d = new Date(time);
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, "0");
+            const day = String(d.getDate()).padStart(2, "0");
+            return `${y}-${m}-${day}`; // YYYY-MM-DD (local!)
+          },
+          async fetchWeather() {
+            this.loading = true;
+            this.error = null;
+
+            try {
+              const { lat, lon, showDays } = this.contentBlock.properties;
+              const res = await api.get("", {
+                params: { lat, lon },
+                headers: {
+                  "X-Test-Cors": "1", // Test: triggers CORS preflight
+                },
+              });
+              const timeseries = res.data.properties.timeseries;
+
+              const days = {};
+              let firstDate = null;
+              let firstTs = true;
+              for (const ts of timeseries) {
+                const dateObj = new Date(ts.time);
+                const date = this.toLocalDate(ts.time);
+                const hour = this.toLocalHour(ts.time);
+                const utcHour = dateObj.getUTCHours();
+                const nowHour = new Date().getHours();
+
+                if (!firstDate) {
+                  firstDate = date; // set once
+                }
+
+                const isFirstDay = date === firstDate;
+                if (isFirstDay && nowHour > hour) continue;
+
+                if (!days[date]) {
+                  days[date] = {
+                    date,
+                    temps: [],
+                    humidities: [],
+                    precipitation: [],
+                    winds: [],
+                    symbol: null,
+                    symbolHourDiff: Infinity,
+                  };
+                }
+
+                // 07–19 temperature & wind
+                if (
+                  (isFirstDay && firstTs) || // today: only using first TS
+                  (!isFirstDay && hour >= 7 && hour <= 19) // future days: full daytime
+                ) {
+                  days[date].temps.push(
+                    ts.data.instant.details.air_temperature,
+                  );
+                  days[date].winds.push(ts.data.instant.details.wind_speed);
+                  days[date].humidities.push(
+                    ts.data.instant.details.relative_humidity,
+                  );
+                }
+                // Accumulate for full day
+                //TODO: Fix localtime correction for day 2,3 and on.
+                if (
+                  !isFirstDay &&
+                  [0, 6, 12, 18].includes(utcHour) &&
+                  ts.data.next_6_hours?.details?.precipitation_amount != null
+                ) {
+                  days[date].precipitation.push(
+                    ts.data.next_6_hours.details.precipitation_amount,
+                  );
+                }
+                if (isFirstDay) {
+                  days[date].precipitation.push(
+                    ts.data.next_1_hours.details.precipitation_amount,
+                  );
+                }
+
+                // Pick symbol closest to 12:00
+                if (
+                  !isFirstDay &&
+                  ts.data.next_12_hours?.summary?.symbol_code
+                ) {
+                  const diff = Math.abs(hour - 12);
+                  if (diff < days[date].symbolHourDiff) {
+                    days[date].symbol =
+                      ts.data.next_12_hours.summary.symbol_code;
+                    days[date].symbolHourDiff = diff;
+                  }
+                }
+
+                if (isFirstDay && firstTs) {
+                  days[date].symbol = ts.data.next_1_hours.summary.symbol_code;
+                }
+
+                firstTs = false;
+              }
+              const maxDays = Math.max(
+                this.contentBlock.properties.showDays,
+                this.contentBlock.properties.portraitShowDays || 0,
+              );
+              this.weather = Object.values(days)
+                .slice(0, maxDays)
+                .map((d) => ({
+                  date: d.date,
+                  temperature: Math.max(...d.temps),
+                  humidity: Math.round(
+                    d.humidities.reduce((a, b) => a + b, 0) /
+                      d.humidities.length,
+                  ),
+                  precipitation: Number(
+                    d.precipitation
+                      .reduce((sum, value) => sum + value, 0)
+                      .toFixed(1),
+                  ),
+                  wind: Math.max(...d.winds),
+                  condition: d.symbol,
+                }));
+            } catch (e) {
+              this.error = "Failed to load weather data";
+            } finally {
+              this.loading = false;
+            }
+          },
+          async resolveLocation(query) {
+            if (!query) return false;
+            try {
+              const res = await axios.get(
+                "https://nominatim.openstreetmap.org/search",
+                {
+                  params: {
+                    q: query,
+                    format: "json",
+                    limit: 1,
+                  },
+                  headers: {
+                    "Accept-Language":
+                      this.contentBlock.properties.language.split("-")[0],
+                    "User-Agent": "MyWeatherApp/1.0 (robin_ms_3@hotmail.com)", // Required by Nominatim
+                  },
+                },
+              );
+              if (res.data.length) {
+                const place = res.data[0];
+
+                this.contentBlock.properties.lat = parseFloat(place.lat);
+                this.contentBlock.properties.lon = parseFloat(place.lon);
+                this.contentBlock.properties.location = place.display_name;
+                this.contentBlock.properties.locationShortName =
+                  place.display_name.split(",")[0];
+
+                return true;
+              }
+            } catch (err) {
+              console.error("Nominatim error:", err);
+            }
+            return false;
+          },
+          onSettingsSave() {
+            this.handleNewSettings();
+            this.showSettings = false;
+          },
+          async iframeMessageHandler(e) {
+            if (e && e.data) {
+              if (e.data == "{}") {
+                this.contentBlock = {};
+              } else {
+                console.log("e", e);
+
+                const contentBlock = JSON.parse(e.data);
+                this.contentBlock = contentBlock;
+                this.handleNewSettings();
+              }
+            }
+          },
+          async handleNewSettings() {
+            document.getElementById("app").style.backgroundColor =
+              this.contentBlock.properties.appBackgroundColor;
+            this.contentBlock.properties.texts = new Translations(
+              this.contentBlock.properties.language,
+            ).texts;
+            if (
+              !this.contentBlock.properties.lat ||
+              !this.contentBlock.properties.lon
+            ) {
+              const resolved = await this.resolveLocation(
+                this.contentBlock.properties.location,
+              );
+              if (!resolved) {
+                this.error =
+                  this.contentBlock.properties.texts.PlaceNotFoundError;
+              }
+            }
+
+            this.checkOrientation();
+            this.fetchWeather();
+          },
+          checkOrientation() {
+            if (window.innerHeight > window.innerWidth) {
+              this.orientation = "portrait";
+            } else {
+              this.orientation = "landscape";
+            }
+            if (
+              this.contentBlock.properties.perspective == "" ||
+              this.contentBlock.properties.perspective == null
+            )
+              return;
+            this.orientation = this.contentBlock.properties.perspective;
+          },
+          capitalizeFirst(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1).replace(".", "");
+          },
+          scheduleNextFetch() {
+            // Clear existing timer (safety)
+            if (this.fetchTimer) {
+              clearTimeout(this.fetchTimer);
+            }
+
+            const now = new Date();
+
+            // Next full hour (local time)
+            const nextHour = new Date(now);
+            nextHour.setMinutes(0, 0, 0);
+            nextHour.setHours(nextHour.getHours() + 1);
+            nextHour.setSeconds(5);
+            const delay = nextHour - now;
+
+            this.fetchTimer = setTimeout(async () => {
+              await this.fetchWeather();
+              this.scheduleNextFetch(); // schedule again
+            }, delay);
+          },
+        },
+        mounted() {
+          this.contentBlock = {
+            properties: {
+              appBackgroundColor: "#7952b7",
+              cardBackgroundColor: "#987DC5",
+              textColor: "#ffffff",
+              language: "en-EN",
+              location: "Oslo, Norway",
+              locationShortName: "Oslo",
+              lat: 59.9114,
+              lon: 10.7579,
+              showDays: 6,
+              portraitShowDays: 4,
+              showFahrenheit: false,
+              texts: new Translations("en-EN").texts,
+              showTempCharacter: false,
+              showLocation: true,
+              showDecimals: true,
+            },
+          };
+          document.getElementById("app").style.backgroundColor =
+            this.contentBlock.properties.appBackgroundColor;
+          window.addEventListener("message", this.iframeMessageHandler);
+          this.checkOrientation();
+          window.addEventListener("resize", this.checkOrientation);
+          this.fetchWeather();
+          this.scheduleNextFetch();
+          this.onVisibilityChange = () => {
+            if (!document.hidden) {
+              this.fetchWeather();
+              this.scheduleNextFetch();
+            }
+          };
+
+          document.addEventListener(
+            "visibilitychange",
+            this.onVisibilityChange,
+          );
+        },
+        beforeUnmount() {
+          window.removeEventListener("resize", this.checkOrientation);
+          window.removeEventListener("message", this.iframeMessageHandler);
+          if (this.fetchTimer) {
+            clearTimeout(this.fetchTimer);
+          }
+          if (this.onVisibilityChange) {
+            document.removeEventListener(
+              "visibilitychange",
+              this.onVisibilityChange,
+            );
+          }
+        },
+      };
+
+      Vue.createApp(App).mount("#app");
     </script>
-</body>
-
+  </body>
 </html>
