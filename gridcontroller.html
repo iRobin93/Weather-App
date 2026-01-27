@@ -1,170 +1,165 @@
 <!--controllergrid.html-->
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8" />
+  <head>
+    <meta charset="UTF-8" />
 
-<style>
-html, body {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    background: black;
-}
-
-/* 2x2 screen layout */
-.grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
-    width: 100%;
-    height: 100%;
-    gap: 8px;              /* thickness of separator */
-    background: #444;      /* separator color */
-}
-
-/* Each quadrant */
-.cell {
-    position: relative;
-    overflow: hidden;
-}
-
-/* iframe fills its quadrant */
-iframe {
-    width: 100%;
-    height: 100%;
-    border: 0;
-    display: block;
-}
-</style>
-</head>
-
-<body class="w-full h-full">
-
-<div class="grid">
-    <!-- Top-left -->
-    <div class="cell">
-        <iframe id="appframe1"></iframe>
-    </div>
-
-    <!-- Top-right -->
-    <div class="cell">
-        <iframe id="appframe2"></iframe>
-    </div>
-
-    <!-- Bottom-left -->
-    <div class="cell">
-        <iframe id="appframe3"></iframe>
-    </div>
-
-    <!-- Bottom-right -->
-    <div class="cell">
-         <iframe id="appframe4"></iframe>
-    </div>
-</div>
-
-<script>
-const showApp = document.getElementById('appframe1');
-showApp.src = './weatherindex.html';
-
-const showApp2 = document.getElementById('appframe2');
-showApp2.src = './clockindex.html';
-
-const showApp3 = document.getElementById('appframe3');
-showApp3.src = './weatherindex.html';
-
-const showApp4 = document.getElementById('appframe4');
-showApp4.src = './weatherindex.html';
-
-
-showApp.onload = () => {
-  showApp.contentWindow.postMessage(
-    JSON.stringify({
-      properties: {
-        appBackgroundColor: "#7952b7",
-        cardBackgroundColor: "#987DC5",
-        textColor: "#ffffff",
-        language: "nb-NO",
-        location: "Oslo, Norway",
-        locationShortName: "Oslo",
-        lat: 59.9114,
-        lon: 10.7579,
-        showDays: 6,
-        portraitShowDays: 4,
-        showFahrenheit: false,
-        showLocation: true,
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: black;
       }
-    }),
-    "*"
-  );
-};
 
-    showApp2.onload = () => {
+      /* 2x2 screen layout */
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 1fr;
+        width: 100%;
+        height: 100%;
+        gap: 8px; /* thickness of separator */
+        background: #444; /* separator color */
+      }
+
+      /* Each quadrant */
+      .cell {
+        position: relative;
+        overflow: hidden;
+      }
+
+      /* iframe fills its quadrant */
+      iframe {
+        width: 100%;
+        height: 100%;
+        border: 0;
+        display: block;
+      }
+    </style>
+  </head>
+
+  <body class="w-full h-full">
+    <div class="grid">
+      <!-- Top-left -->
+      <div class="cell">
+        <iframe id="appframe1"></iframe>
+      </div>
+
+      <!-- Top-right -->
+      <div class="cell">
+        <iframe id="appframe2"></iframe>
+      </div>
+
+      <!-- Bottom-left -->
+      <div class="cell">
+        <iframe id="appframe3"></iframe>
+      </div>
+
+      <!-- Bottom-right -->
+      <div class="cell">
+        <iframe id="appframe4"></iframe>
+      </div>
+    </div>
+
+    <script>
+      const showApp = document.getElementById("appframe1");
+      showApp.src = "./weatherindex.html";
+
+      const showApp2 = document.getElementById("appframe2");
+      showApp2.src = "./clockindex.html";
+
+      const showApp3 = document.getElementById("appframe3");
+      showApp3.src = "./weatherindex.html";
+
+      const showApp4 = document.getElementById("appframe4");
+      showApp4.src = "./weatherindex.html";
+
+      showApp.onload = () => {
+        showApp.contentWindow.postMessage(
+          JSON.stringify({
+            properties: {
+              appBackgroundColor: "#7952b7",
+              cardBackgroundColor: "rgb(137, 93, 207)",
+              textColor: "#ffffff",
+              language: "nb-NO",
+              location: "Oslo, Norway",
+              locationShortName: "Oslo",
+              lat: 59.9114,
+              lon: 10.7579,
+              showDays: 6,
+              portraitShowDays: 4,
+              showFahrenheit: false,
+              showLocation: true,
+            },
+          }),
+          "*",
+        );
+      };
+
+      showApp2.onload = () => {
         showApp2.contentWindow.postMessage(
-            JSON.stringify({
-                properties: {
-                    backgroundColor: "#7952b7",
-                    textColor: "rgba(255, 255, 255, 1)",
-                    watchBackgroundColor: "rgba(250,250,255, 1)",
-                    watchHandsColor: "rgba(0,0,0, 1)",
-                    type: "analog",
-                    slideDuration: 10 * 1000,
-                    language: 'nb-NO',
-                    // example timezone: 'Europe/Oslo', 'America/New_York', etc.
-                    timezone: 'Europe/Oslo',
-                    showSeconds: true, // wip
-                    showFullDate: false,
-                }
-            }),
-            "*"
+          JSON.stringify({
+            properties: {
+              backgroundColor: "#7952b7",
+              textColor: "rgba(255, 255, 255, 1)",
+              watchBackgroundColor: "rgba(250,250,255, 1)",
+              watchHandsColor: "rgba(0,0,0, 1)",
+              type: "analog",
+              slideDuration: 10 * 1000,
+              language: "nb-NO",
+              // example timezone: 'Europe/Oslo', 'America/New_York', etc.
+              timezone: "Europe/Oslo",
+              showSeconds: true, // wip
+              showFullDate: false,
+            },
+          }),
+          "*",
         );
-    };
+      };
 
-    showApp3.onload = () => {
+      showApp3.onload = () => {
         showApp3.contentWindow.postMessage(
-            JSON.stringify({
-                properties: {
-                    appBackgroundColor: "#7952b7",
-                    cardBackgroundColor: "rgb(137, 93, 207)",
-                    textColor: "#ffffff",
-                    language: "nb-NO",
-                    location: "Tromsø",
-                    showDays: 6,
-                    portraitShowDays: 4,             
-                    showFahrenheit: false,
-                    showLocation: true,
-                }
-            }),
-            "*"
+          JSON.stringify({
+            properties: {
+              appBackgroundColor: "#7952b7",
+              cardBackgroundColor: "rgb(137, 93, 207)",
+              textColor: "#ffffff",
+              language: "nb-NO",
+              location: "Tromsø",
+              showDays: 6,
+              portraitShowDays: 4,
+              showFahrenheit: false,
+              showLocation: true,
+            },
+          }),
+          "*",
         );
-    };
+      };
 
-        showApp4.onload = () => {
-            showApp4.contentWindow.postMessage(
-                JSON.stringify({
-                    properties: {
-                        appBackgroundColor: "#7952b7",
-                        cardBackgroundColor: "#987DC5",
-                        textColor: "#ffffff",
-                        language: "nb-NO",
-                        location: "Kristiansand",
-                        showDays: 6,
-                        portraitShowDays: 4,
-                        showFahrenheit: false,
-                        showLocation: true,
-                    }
-                }),
-                "*"
-            );
-        };
-
-</script>
-
-</body>
+      showApp4.onload = () => {
+        showApp4.contentWindow.postMessage(
+          JSON.stringify({
+            properties: {
+              appBackgroundColor: "#7952b7",
+              cardBackgroundColor: "rgb(137, 93, 207)",
+              textColor: "#ffffff",
+              language: "nb-NO",
+              location: "Kristiansand",
+              showDays: 6,
+              portraitShowDays: 4,
+              showFahrenheit: false,
+              showLocation: true,
+            },
+          }),
+          "*",
+        );
+      };
+    </script>
+  </body>
 </html>
-
-
 
 google-chrome --kiosk "http://127.0.0.1:5500/controllergrid.html"
