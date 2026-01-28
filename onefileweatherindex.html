@@ -121,8 +121,12 @@
       //   baseURL: "https://spring-poetry-f967.robinsjothun.workers.dev",
       // });
 
-      const api = axios.create({
-        baseURL: "https://d90ooq15rgult.cloudfront.net/",
+      const metNoClient = axios.create({
+        baseURL: "https://d90ooq15rgult.cloudfront.net",
+      });
+
+      const nominatimClient = axios.create({
+        baseURL: "https://weathered-feather-24d8.robinsjothun.workers.dev",
       });
 
       // -------------------------------
@@ -572,11 +576,8 @@
 
             try {
               const { lat, lon, showDays } = this.contentBlock.properties;
-              const res = await api.get("", {
+              const res = await metNoClient.get("", {
                 params: { lat, lon },
-                headers: {
-                  "X-Test-Cors": "1", // Test: triggers CORS preflight
-                },
               });
               const timeseries = res.data.properties.timeseries;
 
@@ -688,20 +689,16 @@
           async resolveLocation(query) {
             if (!query) return false;
             try {
-              const res = await axios.get(
-                "https://nominatim.openstreetmap.org/search",
-                {
-                  params: {
-                    q: query,
-                    format: "json",
-                    limit: 1,
-                  },
-                  headers: {
-                    "Accept-Language": `${this.contentBlock.properties.language.split("-")[0]}, en`,
-                    "User-Agent": "MyWeatherApp/1.0 (robin_ms_3@hotmail.com)", // Required by Nominatim
-                  },
+              const res = await nominatimClient.get("", {
+                params: {
+                  q: query,
+                  format: "json",
+                  limit: 1,
                 },
-              );
+                headers: {
+                  "Accept-Language": `${this.contentBlock.properties.language.split("-")[0]}, en`,
+                },
+              });
               if (res.data.length) {
                 const place = res.data[0];
 
