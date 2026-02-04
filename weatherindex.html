@@ -171,7 +171,11 @@
       const App = {
         components: { SettingComponent, WeatherCard },
         template: /*HTML*/ `
-                    <div class="w-full h-full relative"
+        
+                    <div
+                     v-if="contentBlock && contentBlock.properties"
+                    class="w-full h-full relative"
+                   
                         :style="{ 
                             backgroundColor: contentBlock.properties?.appBackgroundColor,
                             color: contentBlock.properties?.textColor
@@ -368,22 +372,22 @@
                         </p>
                     </div>
 
-<!-- Cogwheel hover area -->
-<div
-  class="absolute top-4 right-4 z-50
-         w-[8vmin] h-[8vmin]
-         flex items-center justify-center
-         opacity-0 hover:opacity-100
-         transition-opacity duration-200"
->
-    <button
-        @click="showSettings = !showSettings"
-        class="p-2 bg-white bg-opacity-20 backdrop-blur-md rounded-full hover:bg-opacity-40 transition"
-        style="font-size: 3vmin;"
-    >
-        ⚙️
-    </button>
-</div>
+                    <!-- Cogwheel hover area -->
+                    <div
+                      class="absolute top-4 right-4 z-50
+                            w-[8vmin] h-[8vmin]
+                            flex items-center justify-center
+                            opacity-0 hover:opacity-100
+                            transition-opacity duration-200"
+                    >
+                        <button
+                            @click="showSettings = !showSettings"
+                            class="p-2 bg-white bg-opacity-20 backdrop-blur-md rounded-full hover:bg-opacity-40 transition"
+                            style="font-size: 3vmin;"
+                        >
+                            ⚙️
+                        </button>
+                    </div>
 
                     <!-- Settings Panel -->
                     <div
@@ -415,6 +419,23 @@
             return this.contentBlock.properties?.showLocation
               ? this.contentBlock.properties?.locationShortName
               : "";
+          },
+          slideDuration() {
+            try {
+              if (
+                this.contentBlock.properties.slideDuration &&
+                Number.isInteger(
+                  Number(this.contentBlock.properties.slideDuration),
+                ) &&
+                Number(this.contentBlock.properties.slideDuration >= 1000)
+              ) {
+                return Number(this.contentBlock.properties.slideDuration);
+              } else return 8000; // default
+            } catch (error) {
+              console.log("no slide duration property in content block");
+            }
+
+            return 8000; // default
           },
           language() {
             try {
@@ -679,7 +700,7 @@
             }, delay);
           },
 
-          async iframeMessageHandler(e) {
+          iframeMessageHandler(e) {
             if (e && e.data) {
               if (e.data == "{}") {
                 this.contentBlock = {};
@@ -696,22 +717,26 @@
                 this.contentBlock = contentBlock;
                 this.handleNewSettings();
 
-                if (!this.slideshowInterval) {
-                  this.slideshowStart();
-                }
+                this.slideshowStart();
+
                 if (!this.fetchTimer) {
                   this.scheduleNextFetch();
                 }
               }
             }
           },
+
           slideshowStop() {
             clearInterval(this.slideshowInterval);
             this.slideshowInterval = null;
           },
           slideshowStart() {
+            if (this.slideshowInterval) {
+              this.slideshowStop();
+            }
             console.log("slideshowStart weather-app");
 
+            // Should message interval keep running when app is not visible? Should use setTimeout? visibilitychange event?
             this.slideshowInterval = setInterval(() => {
               // new "next"
               parent.postMessage(
@@ -745,9 +770,7 @@
               showDecimals: true,
             },
           };
-          if (this.contentBlock.properties?.appBackgroundColor)
-            document.getElementById("app").style.backgroundColor =
-              this.contentBlock.properties?.appBackgroundColor;
+          document.getElementById("app").style.backgroundColor = "black";
           window.addEventListener("message", this.iframeMessageHandler);
           this.checkOrientation();
           window.addEventListener("resize", this.checkOrientation);
