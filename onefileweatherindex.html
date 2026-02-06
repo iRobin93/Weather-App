@@ -35,11 +35,6 @@
 
     <script type="module">
       // -------------------------------
-      // Settings Component
-      // -------------------------------
-      import { SettingComponent } from "./components/settingComponent.js";
-
-      // -------------------------------
       // Translations class
       // -------------------------------
       class Translations {
@@ -134,6 +129,11 @@
       });
 
       // -------------------------------
+      // Settings Component
+      // -------------------------------
+      // import { SettingComponent } from "./components/settingComponent.js";
+
+      // -------------------------------
       // Weather Formatter
       // -------------------------------
       function formatWeather(day, options) {
@@ -151,15 +151,15 @@
         return {
           temperature: showFahrenheit
             ? `${
-                contentBlock.properties.showDecimals
+                contentBlock.properties?.showDecimals
                   ? ((day.temperature * 9) / 5 + 32).toFixed(1)
                   : Math.round((day.temperature * 9) / 5 + 32)
-              }°${contentBlock.properties.showTempCharacter ? "F" : ""}`
+              }°${contentBlock.properties?.showTempCharacter ? "F" : ""}`
             : `${
-                contentBlock.properties.showDecimals
+                contentBlock.properties?.showDecimals
                   ? day.temperature.toFixed(1)
                   : Math.round(day.temperature)
-              }°${contentBlock.properties.showTempCharacter ? "C" : ""}`,
+              }°${contentBlock.properties?.showTempCharacter ? "C" : ""}`,
 
           weekDay:
             orientation === "landscape"
@@ -195,8 +195,8 @@
                             flex-shrink-0"
                     :style="{
                         gap: '1.5vmin',
-                        backgroundColor: contentBlock.properties.cardBackgroundColor, 
-                        color: contentBlock.properties.textColor, 
+                        backgroundColor: contentBlock.properties?.cardBackgroundColor, 
+                        color: contentBlock.properties?.textColor, 
                         width: '20vmin',
                         height: '30vmin',
                         padding: '2vmin'
@@ -217,8 +217,8 @@
                       v-if="orientation === 'portrait'"
                       class="rounded-2xl shadow-2xl flex items-center flex-shrink-0"
                       :style="{
-                        backgroundColor: contentBlock.properties.cardBackgroundColor,
-                        color: contentBlock.properties.textColor,
+                        backgroundColor: contentBlock.properties?.cardBackgroundColor,
+                        color: contentBlock.properties?.textColor,
                         width: 'clamp(6rem, 35vh, 52rem)',
                         height: 'clamp1rem, 8vh, 16rem)',
                         gap: 'clamp(0.1rem, 1.2vh, 4rem)'
@@ -263,8 +263,8 @@
         computed: {
           display() {
             return formatWeather(this.day, {
-              locale: this.contentBlock.properties.language.split("-")[0],
-              showFahrenheit: this.contentBlock.properties.showFahrenheit,
+              locale: this.contentBlock.properties?.language.split("-")[0],
+              showFahrenheit: this.contentBlock.properties?.showFahrenheit,
               orientation: this.orientation,
               weatherCard: true,
               contentBlock: this.contentBlock,
@@ -282,12 +282,16 @@
       // Root App
       // -------------------------------
       const App = {
-        components: { SettingComponent, WeatherCard },
+        components: { WeatherCard },
         template: /*HTML*/ `
-                    <div class="w-full h-full relative"
+        
+                    <div
+                     v-if="contentBlock && contentBlock.properties"
+                    class="w-full h-full relative"
+                   
                         :style="{ 
-                            backgroundColor: contentBlock.properties.appBackgroundColor, 
-                            color: contentBlock.properties.textColor
+                            backgroundColor: contentBlock.properties?.appBackgroundColor,
+                            color: contentBlock.properties?.textColor
                         }">
 
 
@@ -302,7 +306,7 @@
                     <!-- Row 1: Weekday/Date + Location -->
                     <div  class="flex w-full items-start"
                             :style="{
-                                paddingTop: contentBlock.properties.showDays === 1 ? '30vmin' : '8vmin'
+                                paddingTop: contentBlock.properties?.showDays === 1 ? '30vmin' : '8vmin'
                             }">
                                 <!-- Left: Weekday/Date -->
                         <div class="flex flex-col items-start" style="width: 50%; margin-left: 2vmin">
@@ -343,16 +347,16 @@
                         <!-- Right: Weather Details (aligned under location) -->
                         <div class="flex flex-col items-start text-left" style="width: 50%;">
                             <p class="opacity-80" style="font-size: 3vmin;">
-                                {{ contentBlock.properties.texts.precipitation }}:
+                                {{ contentBlock.properties?.texts?.precipitation }}:
                                 {{ todayWeather.precipitation || 0 }} mm
                             </p>
                             <p class="opacity-80" style="font-size: 3vmin; margin-top: -0.6vmin;">
-                                {{ contentBlock.properties.texts.humidity }}:
+                                {{ contentBlock.properties?.texts?.humidity }}:
                                 {{ todayWeather.humidity || 0 }}%
                             </p>
                             <p class="opacity-80" style="font-size: 3vmin; margin-top: -0.6vmin;">
-                                {{ contentBlock.properties.texts.wind }}:
-                                {{ todayWeather.wind }} {{contentBlock.properties.texts.meterPerSecond}}
+                                {{ contentBlock.properties?.texts?.wind }}:
+                                {{ todayWeather.wind }} {{contentBlock.properties?.texts.meterPerSecond}}
                             </p>
                         </div>
                     </div>
@@ -431,19 +435,19 @@
                             "
                           >
                             <p style="font-size: clamp(0.9rem, 2.5vh, 4.3rem);" class="opacity-80">
-                              {{ contentBlock.properties.texts.precipitation }}:
+                              {{ contentBlock.properties?.texts.precipitation }}:
                               {{ todayWeather.precipitation || 0 }} mm
                             </p>
 
                             <p style="font-size: clamp(0.9rem, 2.5vh, 4.3rem);" class="opacity-80">
-                              {{ contentBlock.properties.texts.humidity }}:
+                              {{ contentBlock.properties?.texts.humidity }}:
                               {{ todayWeather.humidity || 0 }}%
                             </p>
 
                             <p style="font-size: clamp(0.9rem, 2.5vh, 4.3rem);" class="opacity-80">
-                              {{ contentBlock.properties.texts.wind }}:
+                              {{ contentBlock.properties?.texts.wind }}:
                               {{ todayWeather.wind }}
-                              {{ contentBlock.properties.texts.meterPerSecond }}
+                              {{ contentBlock.properties?.texts.meterPerSecond }}
                             </p>
                           </div>
 
@@ -458,7 +462,7 @@
                             "
                           >
                             <WeatherCard
-                              v-for="day in (weather || []).slice(1, contentBlock.properties.portraitShowDays ?? contentBlock.properties.showDays)"
+                              v-for="day in (weather || []).slice(1, contentBlock.properties?.portraitShowDays ?? contentBlock.properties?.showDays)"
                               :key="day.date"
                               :day="day"
                               :contentBlock="contentBlock"
@@ -481,31 +485,22 @@
                         </p>
                     </div>
 
-                    <!-- Cogwheel -->
-                    <div class="absolute top-4 right-4 z-50">
+                    <!-- Cogwheel hover area -->
+                    <div
+                      class="absolute top-4 right-4 z-50
+                            w-[8vmin] h-[8vmin]
+                            flex items-center justify-center
+                            opacity-0 hover:opacity-100
+                            transition-opacity duration-200"
+                    >
                         <button
                             @click="showSettings = !showSettings"
-                            class="p-2 bg-white bg-opacity-20 backdrop-blur-md rounded-full hover:bg-opacity-40 transition flex items-center justify-center"
-                            style="font-size: 3vmin; width: 8vmin; height: 8vmin;"
+                            class="p-2 bg-white bg-opacity-20 backdrop-blur-md rounded-full hover:bg-opacity-40 transition"
+                            style="font-size: 3vmin;"
                         >
                             ⚙️
                         </button>
                     </div>
-
-                    <!-- Settings Panel -->
-                    <div
-                        v-if="showSettings"
-                        class="fixed top-0 right-0 h-full w-80 bg-black bg-opacity-70 backdrop-blur-md p-6 shadow-xl z-40 overflow-auto"
-                    >
-                        <SettingComponent
-                            :contentBlock="contentBlock"
-                            :Translations="Translations"
-                            @update:contentBlock="contentBlock = $event"
-                            @save="onSettingsSave"
-                            @cancel="showSettings = false"
-                        />
-
-                </div>
             `,
         data() {
           return {
@@ -519,15 +514,32 @@
         },
         computed: {
           showLocation() {
-            return this.contentBlock.properties.showLocation
-              ? this.contentBlock.properties.locationShortName
+            return this.contentBlock.properties?.showLocation
+              ? this.contentBlock.properties?.locationShortName
               : "";
+          },
+          slideDuration() {
+            try {
+              if (
+                this.contentBlock.properties.slideDuration &&
+                Number.isInteger(
+                  Number(this.contentBlock.properties.slideDuration),
+                ) &&
+                Number(this.contentBlock.properties.slideDuration >= 1000)
+              ) {
+                return Number(this.contentBlock.properties.slideDuration);
+              } else return 8000; // default
+            } catch (error) {
+              console.log("no slide duration property in content block");
+            }
+
+            return 8000; // default
           },
           language() {
             try {
               return this.contentBlock.properties.language;
             } catch (error) {
-              console.log("no language property in content block");
+              //console.log("no language property in content block");
             }
 
             return "en-US"; // default
@@ -537,8 +549,8 @@
           },
           display() {
             return formatWeather(this.todayWeather, {
-              locale: this.contentBlock.properties.language.split("-")[0],
-              showFahrenheit: this.contentBlock.properties.showFahrenheit,
+              locale: this.contentBlock.properties?.language.split("-")[0],
+              showFahrenheit: this.contentBlock.properties?.showFahrenheit,
               orientation: this.orientation,
               weatherCard: false,
               contentBlock: this.contentBlock,
@@ -547,7 +559,7 @@
           dateFullFormated() {
             const today = this.now;
             const locale = `${this.language}`;
-            // const locale = `${this.contentBlock.properties.languageCode}-${this.contentBlock.properties.countryCode}`;
+            // const locale = `${this.contentBlock.properties?.languageCode}-${this.contentBlock.properties?.countryCode}`;
 
             const options = {
               // dateStyle: 'full',
@@ -664,8 +676,8 @@
                 firstTs = false;
               }
               const maxDays = Math.max(
-                this.contentBlock.properties.showDays,
-                this.contentBlock.properties.portraitShowDays || 0,
+                this.contentBlock.properties?.showDays,
+                this.contentBlock.properties?.portraitShowDays || 0,
               );
               this.weather = Object.values(days)
                 .slice(0, maxDays)
@@ -700,7 +712,7 @@
                   limit: 1,
                 },
                 headers: {
-                  "Accept-Language": `${this.contentBlock.properties.language.split("-")[0]}, en`,
+                  "Accept-Language": `${this.contentBlock.properties?.language.split("-")[0]}, en`,
                 },
               });
               if (res.data.length) {
@@ -723,35 +735,26 @@
             this.handleNewSettings();
             this.showSettings = false;
           },
-          async iframeMessageHandler(e) {
-            if (e && e.data) {
-              if (e.data == "{}") {
-                this.contentBlock = {};
-              } else {
-                console.log("e", e);
 
-                const contentBlock = JSON.parse(e.data);
-                this.contentBlock = contentBlock;
-                this.handleNewSettings();
-              }
-            }
-          },
           async handleNewSettings() {
-            document.getElementById("app").style.backgroundColor =
-              this.contentBlock.properties.appBackgroundColor;
-            this.contentBlock.properties.texts = new Translations(
-              this.contentBlock.properties.language,
-            ).texts;
+            if (this.contentBlock.properties?.appBackgroundColor)
+              document.getElementById("app").style.backgroundColor =
+                this.contentBlock.properties?.appBackgroundColor;
+            if (this.contentBlock?.properties) {
+              this.contentBlock.properties.texts = new Translations(
+                this.contentBlock.properties?.language,
+              ).texts;
+            }
             if (
-              !this.contentBlock.properties.lat ||
-              !this.contentBlock.properties.lon
+              !this.contentBlock.properties?.lat ||
+              !this.contentBlock.properties?.lon
             ) {
               const resolved = await this.resolveLocation(
-                this.contentBlock.properties.location,
+                this.contentBlock.properties?.location,
               );
               if (!resolved) {
                 this.error =
-                  this.contentBlock.properties.texts.PlaceNotFoundError;
+                  this.contentBlock.properties?.texts.PlaceNotFoundError;
               }
             }
 
@@ -765,11 +768,11 @@
               this.orientation = "landscape";
             }
             if (
-              this.contentBlock.properties.perspective == "" ||
-              this.contentBlock.properties.perspective == null
+              this.contentBlock.properties?.perspective == "" ||
+              this.contentBlock.properties?.perspective == null
             )
               return;
-            this.orientation = this.contentBlock.properties.perspective;
+            this.orientation = this.contentBlock.properties?.perspective;
           },
           capitalizeFirst(str) {
             return str.charAt(0).toUpperCase() + str.slice(1).replace(".", "");
@@ -794,6 +797,55 @@
               this.scheduleNextFetch(); // schedule again
             }, delay);
           },
+
+          iframeMessageHandler(e) {
+            if (e && e.data) {
+              if (e.data == "{}") {
+                this.contentBlock = {};
+                if (this.slideshowInterval) {
+                  this.slideshowStop();
+                }
+                if (this.fetchTimer) {
+                  clearTimeout(this.fetchTimer);
+                }
+              } else {
+                console.log("e", e);
+
+                const contentBlock = JSON.parse(e.data);
+                this.contentBlock = contentBlock;
+                this.handleNewSettings();
+
+                this.slideshowStart();
+
+                if (!this.fetchTimer) {
+                  this.scheduleNextFetch();
+                }
+              }
+            }
+          },
+
+          slideshowStop() {
+            clearInterval(this.slideshowInterval);
+            this.slideshowInterval = null;
+          },
+          slideshowStart() {
+            if (this.slideshowInterval) {
+              this.slideshowStop();
+            }
+            console.log("slideshowStart weather-app");
+
+            // Should message interval keep running when app is not visible? Should use setTimeout? visibilitychange event?
+            this.slideshowInterval = setInterval(() => {
+              // new "next"
+              parent.postMessage(
+                {
+                  contentBlockId: this.contentBlock.contentBlockId,
+                  data: "next",
+                },
+                "*",
+              );
+            }, this.slideDuration);
+          },
         },
         mounted() {
           this.contentBlock = {
@@ -804,6 +856,7 @@
               language: "en-EN",
               location: "Oslo, Norway",
               locationShortName: "Oslo",
+              slideDuration: 10 * 1000,
               lat: 59.9114,
               lon: 10.7579,
               showDays: 6,
@@ -815,8 +868,7 @@
               showDecimals: true,
             },
           };
-          document.getElementById("app").style.backgroundColor =
-            this.contentBlock.properties.appBackgroundColor;
+          document.getElementById("app").style.backgroundColor = "black";
           window.addEventListener("message", this.iframeMessageHandler);
           this.checkOrientation();
           window.addEventListener("resize", this.checkOrientation);
@@ -839,6 +891,9 @@
           window.removeEventListener("message", this.iframeMessageHandler);
           if (this.fetchTimer) {
             clearTimeout(this.fetchTimer);
+          }
+          if (this.slideshowInterval) {
+            this.slideshowStop();
           }
           if (this.onVisibilityChange) {
             document.removeEventListener(
