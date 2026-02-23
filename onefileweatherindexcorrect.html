@@ -1,0 +1,906 @@
+<!doctype html>
+<html lang="en" class="w-full h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Vue 3 Weather App</title>
+
+    <!-- Tailwind CSS v2 minified -->
+    <link
+      href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- Vue 3 production -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+
+    <!-- Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <style>
+      html,
+      body,
+      #app {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        font-family: Arial;
+      }
+    </style>
+  </head>
+
+  <body class="w-full h-full">
+    <div id="app"></div>
+
+    <script type="module">
+      // -------------------------------
+      // Translations class
+      // -------------------------------
+      class Translations {
+        constructor(language = "en-EN") {
+          this.language = language;
+
+          const allTexts = {
+            "en-EN": {
+              settings: "Settings",
+              location: "Location",
+              appBackgroundColor: "App background color",
+              cardBackgroundColor: "Weather-card background color",
+              textColor: "Text color",
+              language: "Language",
+              days: "Days to show",
+              portraitShowDays: "Portrait mode days to show",
+              fahrenheit: "Show fahrenheit",
+              showLocation: "Show location",
+              showTempCharacter: "Show temperature character",
+              showDecimals: "Show decimals",
+              forcePerspective: "Force perspective",
+              noForcePerspective: "None",
+              portraitForcePerspective: "Portrait",
+              landscapeForcePerspective: "Landscape",
+              save: "Save",
+              cancel: "Cancel",
+              english: "English",
+              norwegian: "Norwegian",
+              placeNotFoundError: "Could not find location",
+              precipitation: "Precipitation",
+              humidity: "Humidity",
+              wind: "Wind",
+              meterPerSecond: "m/s",
+            },
+            "nb-NO": {
+              settings: "Innstillinger",
+              location: "Sted",
+              appBackgroundColor: "App bakgrunnsfarge",
+              cardBackgroundColor: "Vær-kort bakgrunnsfarge",
+              textColor: "Tekstfarge",
+              language: "Språk",
+              days: "Vis antall dager",
+              portraitShowDays: "Stående modus antall dager",
+              fahrenheit: "Vis fahrenheit",
+              showLocation: "Vis sted",
+              showTempCharacter: "Vis temperatur bokstav",
+              showDecimals: "Vis desimaler",
+              forcePerspective: "Tving perspektiv",
+              noForcePerspective: "Ingen",
+              portraitForcePerspective: "Stående",
+              landscapeForcePerspective: "Liggende",
+              save: "Lagre",
+              cancel: "Avbryt",
+              english: "Engelsk",
+              norwegian: "Norsk",
+              PlaceNotFoundError: "Fant ikke stedet",
+              precipitation: "Nedbør",
+              humidity: "Luftfuktighet",
+              wind: "Vind",
+              meterPerSecond: "m/s",
+            },
+            // Add more languages here
+          };
+
+          // Default to Browser language - or English if browser language is not valid
+          this.texts =
+            allTexts[language] ||
+            allTexts[navigator.language] ||
+            allTexts["en-EN"];
+        }
+      }
+      // -------------------------------
+      // Axios instance
+      // -------------------------------
+
+      // const api = axios.create({ baseURL: "https://api.met.no/weatherapi/locationforecast/2.0/compact" });
+
+      // const api = axios.create({
+      //   baseURL: "https://spring-poetry-f967.robinsjothun.workers.dev",
+      // });
+
+      const metNoClient = axios.create({
+        baseURL: "https://d90ooq15rgult.cloudfront.net",
+      });
+
+      // const nominatimClient = axios.create({
+      //   baseURL: "https://weathered-feather-24d8.robinsjothun.workers.dev",
+      // });
+
+      const nominatimClient = axios.create({
+        baseURL: "https://nominatim-proxy.robinsjothun.workers.dev",
+      });
+
+      // -------------------------------
+      // Settings Component
+      // -------------------------------
+      // import { SettingComponent } from "./components/settingComponent.js";
+
+      
+      // -------------------------------
+      // Weather Formatter
+      // -------------------------------
+      function formatWeather(day, options) {
+        if (!day) return {};
+
+        const {
+          locale,
+          showFahrenheit,
+          orientation,
+          weatherCard,
+          contentBlock,
+        } = options;
+        const date = new Date(day.date);
+
+return {
+  temperature: showFahrenheit
+    ? `${
+        contentBlock.properties?.showDecimals
+          ? ((day.temperature * 9) / 5 + 32).toFixed(1)
+          : Math.round((day.temperature * 9) / 5 + 32)
+      }°${contentBlock.properties?.showTempCharacter ? "F" : ""}`
+    : `${
+        contentBlock.properties?.showDecimals
+          ? day.temperature.toFixed(1)
+          : Math.round(day.temperature)
+      }°${contentBlock.properties?.showTempCharacter ? "C" : ""}`,
+
+  weekDay:
+    orientation === "landscape"
+      ? capitalize(
+          date.toLocaleDateString(locale, {
+            weekday: weatherCard ? "short" : "long",
+          }),
+        )
+      : capitalize(
+          date.toLocaleDateString(locale, { weekday: "long" }),
+        ),
+};
+}
+
+      function capitalize(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1).replace(".", "");
+      }
+
+      // -------------------------------
+      // WeatherCard Component
+      // -------------------------------
+      const WeatherCard = {
+        props: { contentBlock: Object, day: Object, orientation: String },
+        template: /*HTML*/ `
+                <div v-if="orientation == 'landscape'"
+                    class="rounded-2xl shadow-2xl text-center
+                            flex flex-col items-center
+                            flex-shrink-0"
+                    :style="{
+                        gap: '1.5vmin',
+                        backgroundColor: contentBlock.properties?.cardBackgroundColor, 
+                        color: contentBlock.properties?.textColor, 
+                        width: '20vmin',
+                        height: '30vmin',
+                        padding: '2vmin'
+                    }">
+
+                    <h2 class="font-semibold" style="font-size: 3vmin">                    
+                        {{ display.weekDay }}
+                    </h2>
+                    <img
+                        :src="display.icon"
+                        class="mx-auto"
+                        style="width: 12vmin; height: 12vmin;"
+                    />
+                    <p class="font-bold" style="font-size: 3vmin; line-height: 1">{{ display.temperature }}</p>
+                </div>
+
+                <div
+                      v-if="orientation === 'portrait'"
+                      class="rounded-2xl shadow-2xl flex items-center flex-shrink-0"
+                      :style="{
+                        backgroundColor: contentBlock.properties?.cardBackgroundColor,
+                        color: contentBlock.properties?.textColor,
+                        width: 'clamp(6rem, 35vh, 52rem)',
+                        height: 'clamp1rem, 8vh, 16rem)',
+                        gap: 'clamp(0.1rem, 1.2vh, 4rem)'
+                      }"
+                    >
+                      <!-- Day -->
+                      <h2
+                        class="font-semibold"
+                        style="
+                          font-size: clamp(0.3rem, 2.2vh, 5.3rem);
+                          width: clamp(2rem, 15vh, 16rem);
+                          padding-left: clamp(0.3rem, 3vh, 5.5rem);
+                        "
+                      >
+                        {{ display.weekDay }}
+                      </h2>
+
+                      <!-- Icon -->
+                      <img
+                        :src="display.icon"
+                        :alt="day.symbolCode"
+                       style="
+                                width: clamp(2rem, 7vh, 6rem);
+                                height: clamp(2rem, 7vh, 6rem);
+                              "
+                      />
+
+                      <!-- Temperature -->
+                      <div
+                        class="text-right"
+                        style="width: clamp(1rem, 6vh, 8rem);"
+                      >
+                        <p
+                          class="font-bold"
+                          style="font-size: clamp(0.3rem, 2.2vh, 5.2rem);"
+                        >
+                          {{ display.temperature }}
+                        </p>
+                      </div>
+                    </div>
+            `,
+        computed: {
+          display() {
+            return formatWeather(this.day, {
+              locale: this.contentBlock.properties?.language.split("-")[0],
+              showFahrenheit: this.contentBlock.properties?.showFahrenheit,
+              orientation: this.orientation,
+              weatherCard: true,
+              contentBlock: this.contentBlock,
+            });
+          },
+        },
+        methods: {
+          capitalizeFirst(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1).replace(".", "");
+          },
+        },
+      };
+
+      // -------------------------------
+      // Root App
+      // -------------------------------
+      const App = {
+        components: { WeatherCard },
+        template: /*HTML*/ `
+        
+                    <div
+                     v-if="contentBlock && contentBlock.properties"
+                    class="w-full h-full relative"
+                   
+                        :style="{ 
+                            backgroundColor: contentBlock.properties?.appBackgroundColor,
+                            color: contentBlock.properties?.textColor
+                        }">
+
+
+                      <!-- Landscape Today Weather Panel -->
+                <div class="flex flex-col w-full items-center" style="gap: 5vmin;">
+                <div
+                    v-if="todayWeather && orientation === 'landscape'"
+                    class="flex flex-col items-center rounded-xl p-[3vmin]"
+                    :style="{ height: '50vh', gap: '5vmin', width: '110vmin', margin: '0 auto'}"
+                >
+
+                    <!-- Row 1: Weekday/Date + Location -->
+                    <div  class="flex w-full items-start"
+                            :style="{
+                                paddingTop: contentBlock.properties?.showDays === 1 ? '30vmin' : '8vmin'
+                            }">
+                                <!-- Left: Weekday/Date -->
+                        <div class="flex flex-col items-start" style="width: 50%; margin-left: 2vmin">
+                            <h2 style="font-size: 5vmin">
+                                {{ display.weekDay }} {{ dateFullFormated }}
+                            </h2>
+                        </div>
+
+                        <!-- Right: Location - aligned with weather details -->
+                        <div class="flex flex-col items-start" style="width: 50%; padding-left: 2.5vmin">
+                            <h2 style="font-size: 5vmin;">
+                                {{  this.showLocation }}
+                            </h2>
+                        </div>
+                    </div>
+
+                    <!-- ===== Row 2: Temp/Icon (left) + Details (right) ===== -->
+                    <div
+                        class="flex w-full items-center"
+                        :style="{ gap: '6vmin' }"
+                    >
+                        <!-- Left: Temperature + Icon -->
+                        <div
+                            class="flex items-center"
+                            :style="{ gap: '4vmin', width: '50%'  }"
+                        >
+                            <p class="font-bold" style="font-size: 8vmin; margin-left: 2vmin">
+                                {{ display.temperature }}
+                            </p>
+
+                            <img
+                                :src="display.icon"
+                                alt=""
+                                style="width: 22vmin; height: 22vmin;"
+                            />
+                        </div>
+
+                        <!-- Right: Weather Details (aligned under location) -->
+                        <div class="flex flex-col items-start text-left" style="width: 50%;">
+                            <p class="opacity-80" style="font-size: 3vmin;">
+                                {{ contentBlock.properties?.texts?.precipitation }}:
+                                {{ todayWeather.precipitation || 0 }} mm
+                            </p>
+                            <p class="opacity-80" style="font-size: 3vmin; margin-top: -0.6vmin;">
+                                {{ contentBlock.properties?.texts?.humidity }}:
+                                {{ todayWeather.humidity || 0 }}%
+                            </p>
+                            <p class="opacity-80" style="font-size: 3vmin; margin-top: -0.6vmin;">
+                                {{ contentBlock.properties?.texts?.wind }}:
+                                {{ todayWeather.wind }} {{contentBlock.properties?.texts.meterPerSecond}}
+                            </p>
+                        </div>
+                    </div>
+
+
+                    <!-- Landscape Forecast -->
+                    <div v-if="weather && orientation === 'landscape'" class="flex flex-row justify-center w-full gap-4 p-4">
+                        <WeatherCard v-for="day in (weather || []).slice(1, contentBlock.properties.showDays)"
+                        :key="day.date" :day="day" :contentBlock="contentBlock" orientation="landscape" />
+                    </div>  
+                 </div>
+                </div>
+
+
+                    <!-- Portrait layout for today weather -->
+                    <div class="flex flex-col w-full items-center" style="gap: clamp(2vmin, 4vh, 5vmin);">
+
+                      <div
+                        v-if=" todayWeather &&  orientation === 'portrait'"
+                        class="min-h-screen flex items-center justify-center"
+                        style="max-height: 100vh;"
+                      >
+                        <!-- Shared container -->
+                        <div class="flex flex-col items-start max-w-xs w-[90vw] box-border">
+
+                          <!-- Location and Date -->
+                          <div class="text-center mb-2">
+                            <h2
+                              style="
+                                font-size: clamp(1.8rem, 5vh, 3.2rem);
+                                white-space: nowrap;
+                              "
+                            >
+                              {{ display.weekDay }} {{ dateFullFormated }}
+                            </h2>
+
+                            <h2
+                              style="
+                                font-size: clamp(1.8rem, 5vh, 6.2rem);
+                                margin-top: clamp(0.5rem, 1vh, 3rem);
+                              "
+                            >
+                              {{ showLocation }}
+                            </h2>
+                          </div>
+
+                          <!-- Temperature and Icon Row -->
+                          <div
+                            class="flex items-start"
+                            style="gap: clamp(0.75rem, 2vh, 3.5rem);"
+                          >
+                            <p
+                              class="font-bold"
+                              style="font-size: clamp(4rem, 10vh, 12rem);"
+                            >
+                              {{ display.temperature }}
+                            </p>
+
+                            <img
+                              :src="display.icon"
+                              :alt="todayWeather.symbolCode"
+                              style="
+                                width: clamp(4rem, 10vh, 13rem);
+                                margin-top: clamp(1rem, 2.5vh, 5rem);
+                                height: auto;
+                              "
+                            />
+                          </div>
+
+                          <!-- Weather Details -->
+                          <div
+                            class="w-full flex flex-col"
+                            style="
+                              line-height: 1.2;
+                              margin-top: clamp(1rem, 2.5vh, 4rem);
+                            "
+                          >
+                            <p style="font-size: clamp(0.9rem, 2.5vh, 4.3rem);" class="opacity-80">
+                              {{ contentBlock.properties?.texts.precipitation }}:
+                              {{ todayWeather.precipitation || 0 }} mm
+                            </p>
+
+                            <p style="font-size: clamp(0.9rem, 2.5vh, 4.3rem);" class="opacity-80">
+                              {{ contentBlock.properties?.texts.humidity }}:
+                              {{ todayWeather.humidity || 0 }}%
+                            </p>
+
+                            <p style="font-size: clamp(0.9rem, 2.5vh, 4.3rem);" class="opacity-80">
+                              {{ contentBlock.properties?.texts.wind }}:
+                              {{ todayWeather.wind }}
+                              {{ contentBlock.properties?.texts.meterPerSecond }}
+                            </p>
+                          </div>
+
+                          <!-- Portrait Forecast -->
+                          <div
+                            v-if="weather && orientation === 'portrait'"
+                            class="flex flex-col items-start"
+                            style="
+                              max-height: clamp(8rem, 60vh, 60rem);
+                              gap: clamp(0.1rem, 1.2vh, 4rem);
+                              margin-top: clamp(1rem, 5vh, 7rem);
+                            "
+                          >
+                            <WeatherCard
+                              v-for="day in (weather || []).slice(1, contentBlock.properties?.portraitShowDays ?? contentBlock.properties?.showDays)"
+                              :key="day.date"
+                              :day="day"
+                              :contentBlock="contentBlock"
+                              orientation="portrait"
+                            />
+                          </div>
+
+                        </div>
+                      </div>
+                    </div>
+
+
+                    <!-- Loading / Error -->
+                    <div v-if="loading || error" class="w-full h-full flex items-center justify-center">
+                        <p v-if="loading" class="text-center text-lg" style="font-size: 4vmin">
+                            Loading weather...
+                        </p>
+                        <p v-if="error" class="text-center text-red-300 font-semibold" style="font-size: 4vmin">
+                            {{ error }}
+                        </p>
+                    </div>
+
+                    <!-- Cogwheel hover area -->
+                    <div
+                      class="absolute top-4 right-4 z-50
+                            w-[8vmin] h-[8vmin]
+                            flex items-center justify-center
+                            opacity-0 hover:opacity-100
+                            transition-opacity duration-200"
+                    >
+                        <button
+                            @click="showSettings = !showSettings"
+                            class="p-2 bg-white bg-opacity-20 backdrop-blur-md rounded-full hover:bg-opacity-40 transition"
+                            style="font-size: 3vmin;"
+                        >
+                            ⚙️
+                        </button>
+                    </div>
+            `,
+        data() {
+          return {
+            loading: false,
+            error: null,
+            weather: null,
+            showSettings: false,
+            contentBlock: { properties: {} },
+            orientation: null,
+          };
+        },
+        computed: {
+          showLocation() {
+            return this.contentBlock.properties?.showLocation
+              ? this.contentBlock.properties?.locationShortName
+              : "";
+          },
+          slideDuration() {
+            try {
+              if (
+                this.contentBlock.properties.slideDuration &&
+                Number.isInteger(
+                  Number(this.contentBlock.properties.slideDuration),
+                ) &&
+                Number(this.contentBlock.properties.slideDuration >= 1000)
+              ) {
+                return Number(this.contentBlock.properties.slideDuration);
+              } else return 8000; // default
+            } catch (error) {
+              console.log("no slide duration property in content block");
+            }
+
+            return 8000; // default
+          },
+          language() {
+            try {
+              return this.contentBlock.properties.language;
+            } catch (error) {
+              //console.log("no language property in content block");
+            }
+
+            return "en-US"; // default
+          },
+          todayWeather() {
+            return this.weather && this.weather.length ? this.weather[0] : null;
+          },
+          display() {
+            return formatWeather(this.todayWeather, {
+              locale: this.contentBlock.properties?.language.split("-")[0],
+              showFahrenheit: this.contentBlock.properties?.showFahrenheit,
+              orientation: this.orientation,
+              weatherCard: false,
+              contentBlock: this.contentBlock,
+            });
+          },
+          dateFullFormated() {
+            const today = this.now;
+            const locale = `${this.language}`;
+            // const locale = `${this.contentBlock.properties?.languageCode}-${this.contentBlock.properties?.countryCode}`;
+
+            const options = {
+              // dateStyle: 'full',
+              month: "long",
+              day: "numeric",
+            };
+
+            if (this.timezone) {
+              options.timeZone = this.timezone;
+            }
+
+            const formatter = new Intl.DateTimeFormat(locale, options);
+            return formatter.format(today);
+          },
+        },
+        methods: {
+          toLocalHour(time) {
+            return new Date(time).getHours();
+          },
+          toLocalDate(time) {
+            const d = new Date(time);
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, "0");
+            const day = String(d.getDate()).padStart(2, "0");
+            return `${y}-${m}-${day}`; // YYYY-MM-DD (local!)
+          },
+          async fetchWeather() {
+            this.loading = true;
+            this.error = null;
+
+            try {
+              const { lat, lon, showDays } = this.contentBlock.properties;
+              const res = await metNoClient.get("", {
+                params: { lat, lon },
+              });
+              const timeseries = res.data.properties.timeseries;
+
+              const days = {};
+              let firstDate = null;
+              let firstTs = true;
+              for (const ts of timeseries) {
+                const dateObj = new Date(ts.time);
+                const date = this.toLocalDate(ts.time);
+                const hour = this.toLocalHour(ts.time);
+                const utcHour = dateObj.getUTCHours();
+                const nowHour = new Date().getHours();
+
+                if (!firstDate) {
+                  firstDate = date; // set once
+                }
+
+                const isFirstDay = date === firstDate;
+                if (isFirstDay && nowHour > hour) continue;
+
+                if (!days[date]) {
+                  days[date] = {
+                    date,
+                    temps: [],
+                    humidities: [],
+                    precipitation: [],
+                    winds: [],
+                    symbol: null,
+                    symbolHourDiff: Infinity,
+                  };
+                }
+
+                // 07–19 temperature & wind
+                if (
+                  (isFirstDay && firstTs) || // today: only using first TS
+                  (!isFirstDay && hour >= 7 && hour <= 19) // future days: full daytime
+                ) {
+                  days[date].temps.push(
+                    ts.data.instant.details.air_temperature,
+                  );
+                  days[date].winds.push(ts.data.instant.details.wind_speed);
+                  days[date].humidities.push(
+                    ts.data.instant.details.relative_humidity,
+                  );
+                }
+                // Accumulate for full day
+                //TODO: Fix localtime correction for day 2,3 and on.
+                if (
+                  !isFirstDay &&
+                  [0, 6, 12, 18].includes(utcHour) &&
+                  ts.data.next_6_hours?.details?.precipitation_amount != null
+                ) {
+                  days[date].precipitation.push(
+                    ts.data.next_6_hours.details.precipitation_amount,
+                  );
+                }
+                if (isFirstDay) {
+                  days[date].precipitation.push(
+                    ts.data.next_1_hours.details.precipitation_amount,
+                  );
+                }
+
+                // Pick symbol closest to 12:00
+                if (
+                  !isFirstDay &&
+                  ts.data.next_12_hours?.summary?.symbol_code
+                ) {
+                  const diff = Math.abs(hour - 12);
+                  if (diff < days[date].symbolHourDiff) {
+                    days[date].symbol =
+                      ts.data.next_12_hours.summary.symbol_code;
+                    days[date].symbolHourDiff = diff;
+                  }
+                }
+
+                if (isFirstDay && firstTs) {
+                  days[date].symbol = ts.data.next_1_hours.summary.symbol_code;
+                }
+
+                firstTs = false;
+              }
+              const maxDays = Math.max(
+                this.contentBlock.properties?.showDays,
+                this.contentBlock.properties?.portraitShowDays || 0,
+              );
+              this.weather = Object.values(days)
+                .slice(0, maxDays)
+                .map((d) => ({
+                  date: d.date,
+                  temperature: Math.max(...d.temps),
+                  humidity: Math.round(
+                    d.humidities.reduce((a, b) => a + b, 0) /
+                      d.humidities.length,
+                  ),
+                  precipitation: Number(
+                    d.precipitation
+                      .reduce((sum, value) => sum + value, 0)
+                      .toFixed(1),
+                  ),
+                  wind: Math.max(...d.winds),
+                  condition: d.symbol,
+                }));
+            } catch (e) {
+              this.error = "Failed to load weather data";
+            } finally {
+              this.loading = false;
+            }
+          },
+          async resolveLocation(query) {
+            if (!query) return false;
+            try {
+              const res = await nominatimClient.get("", {
+                params: {
+                  q: query,
+                  format: "json",
+                  limit: 1,
+                },
+                headers: {
+                  "Accept-Language": `${this.contentBlock.properties?.language.split("-")[0]}, en`,
+                },
+              });
+              if (res.data.length) {
+                const place = res.data[0];
+
+                this.contentBlock.properties.lat = parseFloat(place.lat);
+                this.contentBlock.properties.lon = parseFloat(place.lon);
+                this.contentBlock.properties.location = place.display_name;
+                this.contentBlock.properties.locationShortName =
+                  place.display_name.split(",")[0];
+
+                return true;
+              }
+            } catch (err) {
+              console.error("Nominatim error:", err);
+            }
+            return false;
+          },
+          onSettingsSave() {
+            this.handleNewSettings();
+            this.showSettings = false;
+          },
+
+          async handleNewSettings() {
+            if (this.contentBlock.properties?.appBackgroundColor)
+              document.getElementById("app").style.backgroundColor =
+                this.contentBlock.properties?.appBackgroundColor;
+            if (this.contentBlock?.properties) {
+              this.contentBlock.properties.texts = new Translations(
+                this.contentBlock.properties?.language,
+              ).texts;
+            }
+            if (
+              !this.contentBlock.properties?.lat ||
+              !this.contentBlock.properties?.lon
+            ) {
+              const resolved = await this.resolveLocation(
+                this.contentBlock.properties?.location,
+              );
+              if (!resolved) {
+                this.error =
+                  this.contentBlock.properties?.texts.PlaceNotFoundError;
+              }
+            }
+
+            this.checkOrientation();
+            this.fetchWeather();
+          },
+          checkOrientation() {
+            if (window.innerHeight > window.innerWidth) {
+              this.orientation = "portrait";
+            } else {
+              this.orientation = "landscape";
+            }
+            if (
+              this.contentBlock.properties?.perspective == "" ||
+              this.contentBlock.properties?.perspective == null
+            )
+              return;
+            this.orientation = this.contentBlock.properties?.perspective;
+          },
+          capitalizeFirst(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1).replace(".", "");
+          },
+          scheduleNextFetch() {
+            // Clear existing timer (safety)
+            if (this.fetchTimer) {
+              clearTimeout(this.fetchTimer);
+            }
+
+            const now = new Date();
+
+            // Next full hour (local time)
+            const nextHour = new Date(now);
+            nextHour.setMinutes(0, 0, 0);
+            nextHour.setHours(nextHour.getHours() + 1);
+            nextHour.setSeconds(5);
+            const delay = nextHour - now;
+
+            this.fetchTimer = setTimeout(async () => {
+              await this.fetchWeather();
+              this.scheduleNextFetch(); // schedule again
+            }, delay);
+          },
+
+          iframeMessageHandler(e) {
+            if (e && e.data) {
+              if (e.data == "{}") {
+                this.contentBlock = {};
+                if (this.slideshowInterval) {
+                  this.slideshowStop();
+                }
+                if (this.fetchTimer) {
+                  clearTimeout(this.fetchTimer);
+                }
+              } else {
+                console.log("e", e);
+
+                const contentBlock = JSON.parse(e.data);
+                this.contentBlock = contentBlock;
+                this.handleNewSettings();
+
+                this.slideshowStart();
+
+                if (!this.fetchTimer) {
+                  this.scheduleNextFetch();
+                }
+              }
+            }
+          },
+
+          slideshowStop() {
+            clearInterval(this.slideshowInterval);
+            this.slideshowInterval = null;
+          },
+          slideshowStart() {
+            if (this.slideshowInterval) {
+              this.slideshowStop();
+            }
+            console.log("slideshowStart weather-app");
+
+            // Should message interval keep running when app is not visible? Should use setTimeout? visibilitychange event?
+            this.slideshowInterval = setInterval(() => {
+              // new "next"
+              parent.postMessage(
+                {
+                  contentBlockId: this.contentBlock.contentBlockId,
+                  data: "next",
+                },
+                "*",
+              );
+            }, this.slideDuration);
+          },
+        },
+        mounted() {
+          this.contentBlock = {
+            properties: {
+              appBackgroundColor: "#7952b7",
+              cardBackgroundColor: "#987DC5",
+              textColor: "#ffffff",
+              language: "en-EN",
+              location: "Oslo, Norway",
+              locationShortName: "Oslo",
+              slideDuration: 10 * 1000,
+              lat: 59.9114,
+              lon: 10.7579,
+              showDays: 6,
+              portraitShowDays: 4,
+              showFahrenheit: false,
+              texts: new Translations("en-EN").texts,
+              showTempCharacter: false,
+              showLocation: true,
+              showDecimals: true,
+            },
+          };
+          document.getElementById("app").style.backgroundColor = "black";
+          window.addEventListener("message", this.iframeMessageHandler);
+          this.checkOrientation();
+          window.addEventListener("resize", this.checkOrientation);
+          this.fetchWeather();
+          this.scheduleNextFetch();
+          this.onVisibilityChange = () => {
+            if (!document.hidden) {
+              this.fetchWeather();
+              this.scheduleNextFetch();
+            }
+          };
+
+          document.addEventListener(
+            "visibilitychange",
+            this.onVisibilityChange,
+          );
+        },
+        beforeUnmount() {
+          window.removeEventListener("resize", this.checkOrientation);
+          window.removeEventListener("message", this.iframeMessageHandler);
+          if (this.fetchTimer) {
+            clearTimeout(this.fetchTimer);
+          }
+          if (this.slideshowInterval) {
+            this.slideshowStop();
+          }
+          if (this.onVisibilityChange) {
+            document.removeEventListener(
+              "visibilitychange",
+              this.onVisibilityChange,
+            );
+          }
+        },
+      };
+
+      Vue.createApp(App).mount("#app");
+    </script>
+  </body>
+</html>
